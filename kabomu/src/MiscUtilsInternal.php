@@ -4,20 +4,26 @@ namespace AaronicSubstances\Kabomu;
 
 class MiscUtilsInternal {
 
-    public static function serializeInt32BE(int $v): array {
-        $dest = [];
-        $dest[0] = 0xFF & ($v >> 24);
-        $dest[1] = 0xFF &($v >> 16);
-        $dest[2] = 0xFF & ($v >> 8);
-        $dest[3] = 0xFF & $v;
+    public static function serializeInt32BE(int $v): string {
+        $dest = '';
+        $dest .= chr(0xFF & ($v >> 24));
+        $dest .= chr(0xFF &($v >> 16));
+        $dest .= chr(0xFF & ($v >> 8));
+        $dest .= chr(0xFF & $v);
         return $dest;
     }
 
-    public static function deserializeInt32BE(array $src, int $offset): int {
-        $v = (($src[$offset] & 0xFF) << 24) | 
-            (($src[$offset + 1] & 0xFF) << 16) | 
-            (($src[$offset + 2] & 0xFF) << 8) | 
-            ($src[$offset + 3] & 0xFF);
+    public static function deserializeInt32BE(string $data, int $offset): int {
+        $src = [
+            ord($data[$offset]),
+            ord($data[$offset + 1]),
+            ord($data[$offset + 2]),
+            ord($data[$offset + 3]),
+        ];
+        $v = (($src[0] & 0xFF) << 24) | 
+            (($src[1] & 0xFF) << 16) | 
+            (($src[2] & 0xFF) << 8) | 
+            ($src[3] & 0xFF);
         if ($v >= 2147483648) {
             $v -= 4294967296;
         }
@@ -58,13 +64,11 @@ class MiscUtilsInternal {
         return $n;
     }
 
-    public static function stringToBytes(string $s): array {
-        $ascii_chars = str_split(mb_convert_encoding($s, 'UTF-8'));
-        return array_map(function($item) { return ord($item); }, $ascii_chars);
+    public static function stringToBytes(string $s): string {
+        return mb_convert_encoding($s, 'UTF-8');
     }
 
-    public static function bytesToString(array $data): string {
-        $data = array_map(function($item) { return chr($item); }, $data);
-        return mb_convert_encoding(join("", $data), mb_internal_encoding(), 'UTF-8');
+    public static function bytesToString(string $data): string {
+        return mb_convert_encoding($data, mb_internal_encoding(), 'UTF-8');
     }
 }

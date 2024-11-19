@@ -2,12 +2,13 @@
 
 namespace AaronicSubstances\Kabomu;
 
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class CsvUtilsTest extends TestCase {
 
-    #[DataProvider('createTestEscapeValueData')]
+    /**
+     * @dataProvider createTestEscapeValueData
+    */
     public function testEscapeValue(string $raw, string $expected): void {
         $actual = CsvUtils::escapeValue($raw);
         $this->assertSame($expected, $actual);
@@ -24,7 +25,9 @@ class CsvUtilsTest extends TestCase {
         ];
     }
 
-    #[DataProvider('createTestUnescapeValueData')]
+    /**
+     * @dataProvider createTestUnescapeValueData
+    */
     public function testUnescapeValue(string $escaped, string $expected): void {
         $actual = CsvUtils::unescapeValue($escaped);
         $this->assertSame($expected, $actual);
@@ -41,7 +44,9 @@ class CsvUtilsTest extends TestCase {
         ];
     }
 
-    #[DataProvider('createTestUnescapeValueForErrorsData')]
+    /**
+     * @dataProvider createTestUnescapeValueForErrorsData
+    */
     public function testUnescapeValueForErrors(string $escaped) {
         $this->expectException(\InvalidArgumentException::class);
 
@@ -59,7 +64,9 @@ class CsvUtilsTest extends TestCase {
         ];
     }
 
-    #[DataProvider('createTestSerializeData')]
+    /**
+     * @dataProvider createTestSerializeData
+    */
     public function testSerialize(array $rows, string $expected) {
         $actual = CsvUtils::serialize($rows);
         $this->assertSame($expected, $actual);
@@ -117,7 +124,9 @@ class CsvUtilsTest extends TestCase {
         return $testData;
     }
 
-    #[DataProvider('createTestDeserializeData')]
+    /**
+     * @dataProvider createTestDeserializeData
+    */
     public function testDeserialize(string $csv, array $expected): void {
         $actual = CsvUtils::deserialize($csv);
         $this->assertEquals($expected, $actual);
@@ -236,7 +245,9 @@ class CsvUtilsTest extends TestCase {
         return $testData;
     }
 
-    #[DataProvider('createTestDeserializeForErrorsData')]
+    /**
+     * @dataProvider createTestDeserializeForErrorsData
+    */
     public function testDeserializeForErrors(string $csv) {
         $this->expectException(\InvalidArgumentException::class);
 
