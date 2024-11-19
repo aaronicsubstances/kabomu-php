@@ -4,12 +4,11 @@ namespace AaronicSubstances\Kabomu;
 
 use Amp\Cancellation;
 
-use AaronicSubstances\Kabomu\Abstractions\PushbackReadableStream;
 use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
 
 class IOUtilsInternal {
 
-    public static function readBytesFully(PushbackReadableStream $source, int $length, Cancellation $cancellation = null): string {
+    public static function readBytesFully($source, int $length, Cancellation $cancellation = null): string {
         if ($length < 0) {
             throw new Exception("Received negative read length of " . $length);
         }

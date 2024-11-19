@@ -30,10 +30,10 @@ class PushbackReadableStream implements ReadableStream, \IteratorAggregate {
     }
 
     public function read(?Cancellation $cancellation = null): ?string {
-        if ($this->closed) {
-            throw new ClosedException;
-        }
         if ($this->pos > 0) {
+            if ($this->closed) {
+                throw new ClosedException;
+            }
             $chunk = array_pop($this->buf);
             $this->pos -= strlen($chunk);
             return $chunk;
@@ -49,21 +49,18 @@ class PushbackReadableStream implements ReadableStream, \IteratorAggregate {
      * @param string $data the byte array to push back
      */
     public function unread(?string &$data): void {
-        if (!$data) {
-            return;
-        }
         if ($this->closed) {
             throw new ClosedException;
+        }
+        if ($data === null) {
+            return;
         }
         $this->buf[] = &$data;
         $this->pos += strlen($data);
     }
 
     public function isReadable(): bool {
-        if ($this->closed) {
-            return FALSE;
-        }
-        if ($this->pos > 0) {
+        if (!$this->closed && $this->pos > 0) {
             return TRUE;
         }
         return $this->backingStream->isReadable();
@@ -85,7 +82,7 @@ class PushbackReadableStream implements ReadableStream, \IteratorAggregate {
      * @return bool `true` if closed, otherwise `false`.
      */
     public function isClosed(): bool {
-        return $this->closed;
+        return $this->backingStream->isClosed();
     }
 
     /**
