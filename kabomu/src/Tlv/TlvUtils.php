@@ -52,6 +52,36 @@ class TlvUtils {
     }
 
     /**
+     * Decodes a 4-byte buffer slice into a positive number
+     * representing a tag.
+     * @param string $data source buffer
+     * @param int $offset starting position in source buffer
+     * @return int decoded positive number
+     */
+    public static function decodeTag(string $data, int $offset): int {
+        $tag = MiscUtilsInternal::deserializeInt32BE($data, $offset);
+        if ($tag <= 0) {
+            throw new \InvalidArgumentException("invalid tag: $tag");
+        }
+        return $tag;
+    }
+
+    /**
+     * Decodes a 4-byte buffer slice into a length.
+     * @param string $data source buffer
+     * @param string $offset starting position in source buffer
+     * @return int The decoded length is negative.
+     */
+    public static function decodeLength(string $data, int $offset): int {
+        $decodedLength = MiscUtilsInternal::deserializeInt32BE($data, $offset);
+        if ($decodedLength < 0) {
+            throw new \InvalidArgumentException("invalid tag value length: " .
+                $decodedLength);
+        }
+        return $decodedLength;
+    }
+
+    /**
      * Creates a stream which wraps another stream to
      * ensure that a given amount of bytes are read from it.
      * @param mixed $stream the readable stream to read from
