@@ -2,9 +2,7 @@
 
 namespace AaronicSubstances\Kabomu\Tlv;
 
-use Amp\Future;
 use Amp\ByteStream\ReadableBuffer;
-use Amp\ByteStream\WritableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
 use AaronicSubstances\Kabomu\IOUtilsInternal;
@@ -13,37 +11,13 @@ use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
 
 class ContentLengthEnforcingStreamInternalTest extends AsyncTestCase {
 
-    public static function readAllBytes($stream) {
-        return \Amp\ByteStream\buffer($stream);
-    }
-
-    public static function defer() {
-        $task = \Amp\async(function () { });
-        Future\await([$task]);
-    }
-
-    public static function createRandomizedReadInputStream($data) {
-        $inputStream = new \Amp\ByteStream\ReadableIterableStream((function () use (&$data) {
-            self::defer();
-            $offset = 0;
-            while ($offset < strlen($data)) {
-                //$bytesToCopy = 1;
-                $bytesToCopy = rand(1, strlen($data) - $offset);
-                yield substr($data, $offset, $bytesToCopy);
-                $offset += $bytesToCopy;
-                self::defer();
-            }
-        })());
-        return new PushbackReadableStream($inputStream);
-    }
-
     /**
      * @dataProvider createTestReadingData
     */
     public function testReading(int $contentLength, ?array $initialData, string $srcData,
             string $expected) {
         // arrange
-        $stream = self::createRandomizedReadInputStream(
+        $stream = \AaronicSubstances\Kabomu\createRandomizedReadInputStream(
             MiscUtilsInternal::stringToBytes($srcData));
         if ($initialData !== null) {
             $initialData = array_map(function($item) { return MiscUtilsInternal::stringToBytes($item); },
@@ -53,13 +27,13 @@ class ContentLengthEnforcingStreamInternalTest extends AsyncTestCase {
             $stream, $contentLength, $initialData);
 
         // act
-        $actual = MiscUtilsInternal::bytesToString(self::readAllBytes($instance));
+        $actual = MiscUtilsInternal::bytesToString(\AaronicSubstances\Kabomu\readAllBytes($instance));
 
         // assert
         $this->assertSame($expected, $actual);
 
         // assert non-repeatability.
-        $actual = MiscUtilsInternal::bytesToString(self::readAllBytes($instance));
+        $actual = MiscUtilsInternal::bytesToString(\AaronicSubstances\Kabomu\readAllBytes($instance));
         $this->assertEmpty($actual);
     }
 
@@ -98,7 +72,7 @@ class ContentLengthEnforcingStreamInternalTest extends AsyncTestCase {
         $this->expectExceptionMessage("end of read");
 
         // act and assert
-        self::readAllBytes($instance);
+        \AaronicSubstances\Kabomu\readAllBytes($instance);
     }
 
     public static function createTestReadingForErrorsData() {
@@ -111,7 +85,7 @@ class ContentLengthEnforcingStreamInternalTest extends AsyncTestCase {
     }
     
     public function testZeroByteReads() {
-        $stream = new PushbackReadableStream(new ReadableBuffer("\x00\x01\x02\x04"));
+        $stream = \AaronicSubstances\Kabomu\createUnreadEnabledReadableBuffer("\x00\x01\x02\x04");
         $instance = TlvUtils::createContentLengthEnforcingStream($stream, 3);
 
         $actual = IOUtilsInternal::readBytesFully($instance, 0);
@@ -124,7 +98,7 @@ class ContentLengthEnforcingStreamInternalTest extends AsyncTestCase {
         $this->assertEmpty($actual);
 
         // test aftermath reads
-        $actual = self::readAllBytes($stream);
+        $actual = \AaronicSubstances\Kabomu\readAllBytes($stream);
         $this->assertSame("04", bin2hex($actual));
     }
 }

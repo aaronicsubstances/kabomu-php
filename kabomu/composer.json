@@ -1,6 +1,5 @@
 {
     "name": "aaronicsubstances/kabomu",
-    "version": "0.9.0",
     "description": "Kabomu library for PHP",
     "type": "library",
     "require": {
@@ -15,6 +14,14 @@
         "psr-4": {
             "AaronicSubstances\\Kabomu\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AaronicSubstances\\Kabomu\\": "tests/"
+        },
+        "files": [
+            "tests/functions.php"
+        ]
     },
     "authors": [
         {

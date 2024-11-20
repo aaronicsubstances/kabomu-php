@@ -9,10 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 class TlvUtilsTest extends AsyncTestCase {
 
-    public static function readAllBytes($stream) {
-        return \Amp\ByteStream\buffer($stream);
-    }
-
     /**
      * @dataProvider createTestEncodeTagAndLengthData
     */
@@ -54,7 +50,7 @@ class TlvUtilsTest extends AsyncTestCase {
             "\x00\x00\x00\x10" .
             "\x00\x00\x00\x00";
         $instance = TlvUtils::createTlvEncodingReadableStream($backingStream, 0x10);
-        $actual = self::readAllBytes($instance);
+        $actual = \AaronicSubstances\Kabomu\readAllBytes($instance);
         $this->assertSame(bin2hex($expected), bin2hex($actual));
     }
 }
