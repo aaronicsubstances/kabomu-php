@@ -16,7 +16,7 @@ function defer() {
     Future\await([$task]);
 }
 
-function createRandomizedReadInputStream($data) {
+function createRandomizedReadInputStream($data, $enableUnread = true) {
     $inputStream = new \Amp\ByteStream\ReadableIterableStream((function () use (&$data) {
         defer();
         $offset = 0;
@@ -28,6 +28,9 @@ function createRandomizedReadInputStream($data) {
             defer();
         }
     })());
+    if (!$enableUnread) {
+        return $inputStream;
+    }
     return new PushbackReadableStream($inputStream);
 }
 

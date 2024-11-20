@@ -19,7 +19,7 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
     use ForbidSerialization;
 
     private readonly mixed $backingStream;
-    private readonly int $tagTouse;
+    private readonly int $tagToUse;
 
     private ?string $outstanding = null;
 
