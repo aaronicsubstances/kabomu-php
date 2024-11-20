@@ -25,7 +25,7 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
 
     private bool $reading = false;
 
-    private bool $doneReading = FALSE;
+    private bool $doneWithBackingStream = FALSE;
 
     private readonly DeferredFuture $onClose;
     private bool $closed = FALSE;
@@ -50,14 +50,14 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
                 throw new ClosedException;
             }
 
-            if ($this->doneReading) {
-                return null;
-            }
-
             if ($this->outstanding) {
                 $chunk = $this->outstanding;
                 $this->outstanding = null;
                 return $chunk;
+            }
+
+            if ($this->doneWithBackingStream) {
+                return null;
             }
 
             // skip over empty but non-null strings
@@ -69,7 +69,7 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
             }
             if ($chunk === null) {
                 $chunk = TlvUtils::generateEndOfTlvStream($this->tagToUse);
-                $this->doneReading = TRUE;
+                $this->doneWithBackingStream = TRUE;
             }
             else {
                 $this->outstanding = $chunk;
@@ -83,7 +83,7 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
     }
 
     public function isReadable(): bool {
-        return $this->closed || $this->doneReading;
+        return $this->closed || $this->doneWithBackingStream;
     }
 
     /**

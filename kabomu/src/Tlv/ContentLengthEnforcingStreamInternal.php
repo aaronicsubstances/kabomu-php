@@ -26,7 +26,7 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
 
     private bool $reading = false;
 
-    private bool $doneReading = FALSE;
+    private bool $doneWithBackingStream = FALSE;
 
     private readonly DeferredFuture $onClose;
     private bool $closed = FALSE;
@@ -56,9 +56,11 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
             if ($this->closed) {
                 throw new ClosedException;
             }
-            if ($this->doneReading) {
+
+            if ($this->doneWithBackingStream) {
                 return null;
             }
+
             if (!empty($this->initialData)) {
                 $chunk = array_shift($this->initialData);
             }
@@ -66,6 +68,7 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
                 // let zero content length result in read from backing stream
                 $chunk = $this->backingStream->read($cancellation);
             }
+
             if ($chunk === null) {
                 if ($this->bytesLeft) {
                     throw KabomuIOException::createEndOfReadError();
@@ -75,7 +78,7 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
                         "expected content length to be zero but found $this->contentLength"
                     );
                 }
-                $this->doneReading = TRUE;
+                $this->doneWithBackingStream = TRUE;
             }
             else {
                 $chunkLen = strlen($chunk);
@@ -95,9 +98,10 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
                     $this->bytesLeft = 0;
                 }
                 if (!$this->bytesLeft) {
-                    $this->doneReading = TRUE;
+                    $this->doneWithBackingStream = TRUE;
                 }
             }
+            
             return $chunk;
         }
         finally {

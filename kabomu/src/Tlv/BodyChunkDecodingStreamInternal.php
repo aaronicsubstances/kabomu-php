@@ -28,7 +28,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
 
     private bool $reading = false;
 
-    private bool $doneReading = FALSE;
+    private bool $doneWithBackingStream = FALSE;
     
     private array $chunks;
     private bool $isDecodingHeader = true;
@@ -68,7 +68,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
                     return array_shift($this->onDataPushes);
                 }
                 
-                if ($this->doneReading) {
+                if ($this->doneWithBackingStream) {
                     return null;
                 }
                 
@@ -157,7 +157,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
                     $unshift = substr($concatenated, $concatenatedLengthUsed);
                     $this->backingStream->unread($unshift);
                 }
-                $this->doneReading = true;
+                $this->doneWithBackingStream = true;
                 return;
             }
             $nextChunkLength = min($this->outstandingDataLength,
@@ -216,7 +216,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
     }
 
     public function isReadable(): bool {
-        return $this->closed || (empty($this->onDataPushes) && $this->doneReading);
+        return $this->closed || (empty($this->onDataPushes) && $this->doneWithBackingStream);
     }
 
     /**
