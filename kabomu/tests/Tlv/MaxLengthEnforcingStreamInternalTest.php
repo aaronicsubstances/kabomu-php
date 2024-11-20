@@ -9,7 +9,6 @@ use Amp\PHPUnit\AsyncTestCase;
 use AaronicSubstances\Kabomu\IOUtilsInternal;
 use AaronicSubstances\Kabomu\MiscUtilsInternal;
 use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
-use AaronicSubstances\Kabomu\Tlv\PushbackReadableStream;
 
 class MaxLengthEnforcingStreamInternalTest extends AsyncTestCase {
 

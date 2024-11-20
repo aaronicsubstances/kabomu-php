@@ -10,8 +10,6 @@ use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\ReadableStreamIteratorAggregate;
 
-use AaronicSubstances\Kabomu\MiscUtilsInternal;
-use AaronicSubstances\Kabomu\Abstractions\PushbackReadableStream;
 use AaronicSubstances\Kabomu\Exceptions\ExpectationViolationException;
 use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
 

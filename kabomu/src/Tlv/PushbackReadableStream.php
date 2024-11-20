@@ -18,6 +18,9 @@ class PushbackReadableStream implements ReadableStream, \IteratorAggregate {
     private readonly mixed $backingStream;
     private array $buf;
     private int $pos;
+
+    private bool $reading = false;
+
     private bool $closed = FALSE;
 
     public function __construct($backingStream) {
@@ -30,15 +33,24 @@ class PushbackReadableStream implements ReadableStream, \IteratorAggregate {
     }
 
     public function read(?Cancellation $cancellation = null): ?string {
-        if ($this->pos > 0) {
+        if ($this->reading) {
+            throw new PendingReadError;
+        }
+        $this->reading = true;
+        try {
             if ($this->closed) {
                 throw new ClosedException;
             }
-            $chunk = array_pop($this->buf);
-            $this->pos -= strlen($chunk);
-            return $chunk;
+            if ($this->pos > 0) {
+                $chunk = array_pop($this->buf);
+                $this->pos -= strlen($chunk);
+                return $chunk;
+            }
+            return $this->backingStream->read($cancellation);
         }
-        return $this->backingStream->read($cancellation);
+        finally {
+            $this->reading = false;
+        }
     }
 
     /**
@@ -49,14 +61,23 @@ class PushbackReadableStream implements ReadableStream, \IteratorAggregate {
      * @param string $data the byte array to push back
      */
     public function unread(?string &$data): void {
-        if ($this->closed) {
-            throw new ClosedException;
-        }
         if ($data === null) {
             return;
         }
-        $this->buf[] = &$data;
-        $this->pos += strlen($data);
+        if ($this->reading) {
+            throw new PendingReadError;
+        }
+        $this->reading = true;
+        try {
+            if ($this->closed) {
+                throw new ClosedException;
+            }
+            $this->buf[] = &$data;
+            $this->pos += strlen($data);
+        }
+        finally {
+            $this->reading = false;
+        }
     }
 
     public function isReadable(): bool {
@@ -72,7 +93,6 @@ class PushbackReadableStream implements ReadableStream, \IteratorAggregate {
      */
     public function close(): void {
         $this->closed = TRUE;
-        $this->buf = [];
         $this->backingStream->close();
     }
 

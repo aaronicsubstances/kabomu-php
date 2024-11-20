@@ -8,7 +8,6 @@ use Amp\ForbidSerialization;
 use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\ReadableStreamIteratorAggregate;
 
-use AaronicSubstances\Kabomu\MiscUtilsInternal;
 use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
 
 class MaxLengthEnforcingStreamInternal implements ReadableStream, \IteratorAggregate {
