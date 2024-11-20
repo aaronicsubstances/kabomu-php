@@ -20,7 +20,10 @@ class MaxLengthEnforcingStreamInternal implements ReadableStream, \IteratorAggre
 
     private readonly mixed $backingStream;
     private readonly int $maxLength;
+
     private int $bytesLeft;
+
+    private bool $reading = false;
 
     public function __construct($backingStream, int $maxLength = 0) {
         if (!$backingStream) {
@@ -32,30 +35,31 @@ class MaxLengthEnforcingStreamInternal implements ReadableStream, \IteratorAggre
         else if ($maxLength < 0) {
             throw new \InvalidArgumentException("max length cannot be negative: $maxLength");
         }
+        $this->backingStream = $backingStream;
         $this->maxLength = $maxLength;
         $this->bytesLeft = $maxLength;
-        $this->backingStream = $backingStream;
     }
 
     public function read(?Cancellation $cancellation = null): ?string {
-        $chunk = $this->backingStream->read($cancellation);
-        if ($chunk === null) {
-            return null;
+        if ($this->reading) {
+            throw new PendingReadError;
         }
-        $chunkLen = strlen($chunk);
-        if ($chunkLen > $this->bytesLeft) {
-            throw new KabomuIOException(
-                "stream size exceeds limit of $this->maxLength bytes");
+        $this->reading = true;
+        try {
+            $chunk = $this->backingStream->read($cancellation);
+            if ($chunk === null) {
+                return null;
+            }
+            $chunkLen = strlen($chunk);
+            if ($chunkLen > $this->bytesLeft) {
+                throw new KabomuIOException(
+                    "stream size exceeds limit of $this->maxLength bytes");
+            }
+            $this->bytesLeft -= $chunkLen;
+            return $chunk;
         }
-        $this->bytesLeft -= $chunkLen;
-        return $chunk;
-    }
-
-    public function unread(?string $data) {
-        $this->backingStream->unread($data);
-        if ($data) {
-            $this->bytesLeft += strlen($data);
-            $this->doneReading = FALSE;
+        finally {
+            $this->reading = false;
         }
     }
 

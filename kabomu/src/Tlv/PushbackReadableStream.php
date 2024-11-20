@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AaronicSubstances\Kabomu\Abstractions;
+namespace AaronicSubstances\Kabomu\Tlv;
 
 use Amp\Cancellation;
 use Amp\ForbidCloning;

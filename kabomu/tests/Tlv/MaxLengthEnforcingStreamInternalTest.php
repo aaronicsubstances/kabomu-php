@@ -6,10 +6,10 @@ use Amp\Future;
 use Amp\ByteStream\ReadableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
-use AaronicSubstances\Kabomu\Abstractions\PushbackReadableStream;
-use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
 use AaronicSubstances\Kabomu\IOUtilsInternal;
 use AaronicSubstances\Kabomu\MiscUtilsInternal;
+use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
+use AaronicSubstances\Kabomu\Tlv\PushbackReadableStream;
 
 class MaxLengthEnforcingStreamInternalTest extends AsyncTestCase {
 

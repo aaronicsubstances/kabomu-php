@@ -7,8 +7,8 @@ use Amp\ByteStream\ReadableBuffer;
 use Amp\ByteStream\WritableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
-use AaronicSubstances\Kabomu\Abstractions\PushbackReadableStream;
 use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
+use AaronicSubstances\Kabomu\Tlv\PushbackReadableStream;
 
 class IOUtilsInternalTest extends AsyncTestCase  {
 

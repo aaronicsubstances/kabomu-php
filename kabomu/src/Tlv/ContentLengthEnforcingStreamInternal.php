@@ -23,13 +23,17 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
     private readonly mixed $backingStream;
     private readonly int $contentLength;
 
+    private ?array $initialData;
     private int $bytesLeft;
+
+    private bool $reading = false;
+
     private bool $doneReading = FALSE;
 
-    private bool $closed = FALSE;
     private readonly DeferredFuture $onClose;
+    private bool $closed = FALSE;
 
-    public function __construct(mixed $backingStream, int $contentLength) {
+    public function __construct($backingStream, int $contentLength, ?array $initialData = null) {
         if (!$backingStream) {
             throw new \InvalidArgumentException("Expected a backing stream");
         }
@@ -38,63 +42,68 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
         }
         $this->backingStream = $backingStream;
         $this->contentLength = $contentLength;
+
+        $this->initialData = $initialData;
         $this->bytesLeft = $contentLength;
 
         $this->onClose = new DeferredFuture;
     }
 
     public function read(?Cancellation $cancellation = null): ?string {
-        if ($this->closed) {
-            throw new ClosedException;
+        if ($this->reading) {
+            throw new PendingReadError;
         }
-        if ($this->doneReading) {
-            return null;
-        }
-        // let zero content length result in read from backing stream
-        $chunk = $this->backingStream->read($cancellation);
-        if ($chunk === null) {
-            if ($this->bytesLeft) {
-                throw KabomuIOException::createEndOfReadError();
+        $this->reading = true;
+        try {
+            if ($this->closed) {
+                throw new ClosedException;
             }
-            if ($this->contentLength) {
-                throw new ExpectationViolationException(
-                    "expected content length to be zero but found $this->contentLength"
-                );
+            if ($this->doneReading) {
+                return null;
             }
-            $this->doneReading = TRUE;
-        }
-        else {
-            $chunkLen = strlen($chunk);
-            if ($chunkLen <= $this->bytesLeft) {
-                $this->bytesLeft -= $chunkLen;
+            if (!empty($this->initialData)) {
+                $chunk = array_shift($this->initialData);
             }
             else {
-                if ($this->contentLength) {
-                    $outstanding = substr($chunk, $this->bytesLeft - $chunkLen);
-                    $this->backingStream->unread($outstanding);
-                    $chunk = substr($chunk, 0, $this->bytesLeft);
-                }
-                else {
-                    $this->backingStream->unread($chunk);
-                    $chunk = null;
-                }
-                $this->bytesLeft = 0;
+                // let zero content length result in read from backing stream
+                $chunk = $this->backingStream->read($cancellation);
             }
-            if (!$this->bytesLeft) {
+            if ($chunk === null) {
+                if ($this->bytesLeft) {
+                    throw KabomuIOException::createEndOfReadError();
+                }
+                if ($this->contentLength) {
+                    throw new ExpectationViolationException(
+                        "expected content length to be zero but found $this->contentLength"
+                    );
+                }
                 $this->doneReading = TRUE;
             }
+            else {
+                $chunkLen = strlen($chunk);
+                if ($chunkLen <= $this->bytesLeft) {
+                    $this->bytesLeft -= $chunkLen;
+                }
+                else {
+                    if ($this->contentLength) {
+                        $outstanding = substr($chunk, $this->bytesLeft - $chunkLen);
+                        $this->backingStream->unread($outstanding);
+                        $chunk = substr($chunk, 0, $this->bytesLeft);
+                    }
+                    else {
+                        $this->backingStream->unread($chunk);
+                        $chunk = null;
+                    }
+                    $this->bytesLeft = 0;
+                }
+                if (!$this->bytesLeft) {
+                    $this->doneReading = TRUE;
+                }
+            }
+            return $chunk;
         }
-        return $chunk;
-    }
-
-    public function unread(?string $data) {
-        if ($this->closed) {
-            throw new ClosedException;
-        }
-        $this->backingStream->unread($data);
-        if ($data) {
-            $this->bytesLeft += strlen($data);
-            $this->doneReading = FALSE;
+        finally {
+            $this->reading = false;
         }
     }
 
@@ -107,8 +116,8 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
      * Whether pending operations are aborted or not is implementation dependent.
      */
     public function close(): void {
-        $this->closed = TRUE;
-        if (!$this->onClose->isComplete()) {
+        if (!$this->closed) {
+            $this->closed = TRUE;
             $this->onClose->complete();
         }
     }

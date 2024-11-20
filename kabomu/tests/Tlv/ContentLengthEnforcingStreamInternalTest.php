@@ -7,10 +7,10 @@ use Amp\ByteStream\ReadableBuffer;
 use Amp\ByteStream\WritableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
-use AaronicSubstances\Kabomu\Abstractions\PushbackReadableStream;
-use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
 use AaronicSubstances\Kabomu\IOUtilsInternal;
 use AaronicSubstances\Kabomu\MiscUtilsInternal;
+use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
+use AaronicSubstances\Kabomu\Tlv\PushbackReadableStream;
 
 class ContentLengthEnforcingStreamInternalTest extends AsyncTestCase {
 
@@ -41,13 +41,17 @@ class ContentLengthEnforcingStreamInternalTest extends AsyncTestCase {
     /**
      * @dataProvider createTestReadingData
     */
-    public function testReading(int $contentLength, string $srcData,
+    public function testReading(int $contentLength, ?array $initialData, string $srcData,
             string $expected) {
         // arrange
         $stream = self::createRandomizedReadInputStream(
             MiscUtilsInternal::stringToBytes($srcData));
+        if ($initialData !== null) {
+            $initialData = array_map(function($item) { return MiscUtilsInternal::stringToBytes($item); },
+                $initialData);
+        }
         $instance = TlvUtils::createContentLengthEnforcingStream(
-            $stream, $contentLength);
+            $stream, $contentLength, $initialData);
 
         // act
         $actual = MiscUtilsInternal::bytesToString(self::readAllBytes($instance));
@@ -62,15 +66,23 @@ class ContentLengthEnforcingStreamInternalTest extends AsyncTestCase {
 
     public static function createTestReadingData() {
         return [
-            [0, '',     ''],
-            [0, 'a',      ''],
-            [1, 'ab',     "a"],
-            [2, 'ab',     "ab"],
-            [2, 'abc',    "ab"],
-            [3, 'abc',    "abc"],
-            [4, 'abcd',   "abcd"],
-            [5, 'abcde',  "abcde"],
-            [6, 'abcdefghi', 'abcdef']
+            [0, null, '',     ''],
+            [0, null, 'a',      ''],
+            [1, null, 'ab',     "a"],
+            [2, null, 'ab',     "ab"],
+            [2, null, 'abc',    "ab"],
+            [3, null, 'abc',    "abc"],
+            [4, null, 'abcd',   "abcd"],
+            [5, null, 'abcde',  "abcde"],
+            [6, null, 'abcdefghi', 'abcdef'],
+            // test initialData
+            [0, [''], 'a',      ''],
+            [0, ['a'], 'b',      ''],
+            [2, ['a'], 'b',     "ab"],
+            [2, ['a', 'bc'], 'd',     "ab"],
+            [6, ['ab', '', 'c', 'de'], 'fghi', 'abcdef'],
+            [7, ['0123xyz'], 'a', '0123xyz'],
+            [10, ['ab'], 'cdefghij', 'abcdefghij'],
         ];
     }
 
