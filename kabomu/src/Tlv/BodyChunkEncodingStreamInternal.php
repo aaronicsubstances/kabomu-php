@@ -10,6 +10,7 @@ use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\ReadableStreamIteratorAggregate;
 
+use AaronicSubstances\Kabomu\MiscUtilsInternal;
 use AaronicSubstances\Kabomu\Exceptions\ExpectationViolationException;
 use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
 
@@ -21,7 +22,7 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
     private readonly mixed $backingStream;
     private readonly int $tagToUse;
 
-    private ?string $outstanding = null;
+    private array $outstanding;
 
     private bool $reading = false;
 
@@ -38,6 +39,8 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
         $this->backingStream = $backingStream;
         $this->tagToUse = $tagToUse;
         $this->onClose = new DeferredFuture;
+
+        $this->outstanding = [];
     }
 
     public function read(?Cancellation $cancellation = null): ?string {
@@ -50,10 +53,8 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
                 throw new ClosedException;
             }
 
-            if ($this->outstanding) {
-                $chunk = $this->outstanding;
-                $this->outstanding = null;
-                return $chunk;
+            if (!empty($this->outstanding)) {
+                return array_shift($this->outstanding);
             }
 
             if ($this->doneWithBackingStream) {
@@ -68,14 +69,14 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
                 }
             }
             if ($chunk === null) {
-                $chunk = TlvUtils::generateEndOfTlvStream($this->tagToUse);
+                $this->outstanding[] = MiscUtilsInternal::serializeInt32BE(0);
                 $this->doneWithBackingStream = TRUE;
             }
             else {
-                $this->outstanding = $chunk;
-                $chunk = TlvUtils::encodeTagAndLength($this->tagToUse, strlen($chunk));
+                $this->outstanding[] = MiscUtilsInternal::serializeInt32BE(strlen($chunk));
+                $this->outstanding[] = $chunk;
             }
-            return $chunk;
+            return MiscUtilsInternal::serializeInt32BE($this->tagToUse);
         }
         finally {
             $this->reading = false;
@@ -83,7 +84,7 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
     }
 
     public function isReadable(): bool {
-        return $this->closed || $this->doneWithBackingStream;
+        return $this->closed || (empty($this->outstanding) && $this->doneWithBackingStream);
     }
 
     /**
