@@ -91,7 +91,7 @@ class TlvUtils {
      * @return mixed stream which enforces a certain length on
      * readable stream argument
      */
-    public static function createContentLengthEnforcingStream($stream, int $length, ?array &$initialData = null) {
+    public static function createContentLengthEnforcingStream($stream, int $length, ?array $initialData = null) {
         return new PushbackReadableStream(new ContentLengthEnforcingStreamInternal($stream, $length, $initialData));
     }
 
@@ -120,7 +120,7 @@ class TlvUtils {
      * @return mixed stream which decodes TLV-encoded bytes chunks.
      */
     public static function createTlvDecodingReadableStream($stream,
-            int $expectedTag, ?int $tagToIgnore = null, ?array &$initialData = null) {
+            int $expectedTag, ?int $tagToIgnore = null, ?array $initialData = null) {
         return new PushbackReadableStream(new BodyChunkDecodingStreamInternal($stream, $expectedTag,
             $tagToIgnore, $initialData));
     }
