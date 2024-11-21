@@ -4,7 +4,9 @@ namespace AaronicSubstances\Kabomu;
 
 use Amp\Future;
 use Amp\ByteStream\ReadableBuffer;
+use PHPUnit\Framework\Assert;
 
+use AaronicSubstances\Kabomu\Abstractions\QuasiHttpProcessingOptions;
 use AaronicSubstances\Kabomu\Tlv\PushbackReadableStream;
 
 function readAllBytes($stream) {
@@ -36,4 +38,21 @@ function createRandomizedReadInputStream($data, $enableUnread = true) {
 
 function createUnreadEnabledReadableBuffer($data) {
     return new PushbackReadableStream(new ReadableBuffer($data));
+}
+
+function compareProcessingOptions(
+        ?QuasiHttpProcessingOptions $expected,
+        ?QuasiHttpProcessingOptions $actual) {
+    if ($expected === null || $actual === null) {
+        TestCase::assertSame($expected, $actual);
+        return;
+    }
+    Assert::assertSame($expected->getMaxResponseBodySize(),
+        $actual->getMaxResponseBodySize());
+    Assert::assertSame($expected->getTimeoutMillis(),
+        $actual->getTimeoutMillis());
+    Assert::assertEquals($expected->getExtraConnectivityParams(),
+        $actual->getExtraConnectivityParams());
+    Assert::assertSame($expected->getMaxHeadersSize(),
+        $actual->getMaxHeadersSize());
 }

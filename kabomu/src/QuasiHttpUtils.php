@@ -170,7 +170,7 @@ class QuasiHttpUtils {
                 0));
 
         $mergedOptions->setExtraConnectivityParams(
-            determineEffectiveOptions(
+            self::determineEffectiveOptions(
                 $preferred->getExtraConnectivityParams(),
                 $fallback->getExtraConnectivityParams()));
 
@@ -233,7 +233,7 @@ class QuasiHttpUtils {
             }
         }
         if ($preferred) {
-            foreach ($$prefered as $k => $v) {
+            foreach ($preferred as $k => $v) {
                 $dest[$k] = $v;
             }
         }
