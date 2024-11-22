@@ -7,7 +7,7 @@ use AaronicSubstances\Kabomu\StandardQuasiHttpServer;
 
 /**
  * Represents timeout API for instances of
- * {@link StandardQuasiHttpClient} and {@link StandardQuasiHttpServer}
+ * {@link StandardQuasiHttpClient::class} and {@link \AaronicSubstances\Kabomu\StandardQuasiHttpServer}
  * classes to impose timeouts on request processing.
  */
 interface CustomTimeoutScheduler {

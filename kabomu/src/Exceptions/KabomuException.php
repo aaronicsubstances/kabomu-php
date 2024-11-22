@@ -2,9 +2,20 @@
 
 namespace AaronicSubstances\Kabomu\Exceptions;
 
+/**
+ * Base exception class for errors encountered in the library.
+ */
 class KabomuException extends \Exception {
 
     // Redefine the exception so message isn't optional
+
+    /**
+     * Creates a new instance with an error message,
+     * a reason code and inner exception.
+     * @param string $message the error message
+     * @param int $reasonCode reason code to use
+     * @param \Throwable $previous optional cause of this exception
+     */
     public function __construct(string $message, int $code = 0, \Throwable $previous = null) {
         // some code
 

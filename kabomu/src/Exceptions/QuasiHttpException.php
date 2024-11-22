@@ -2,6 +2,14 @@
 
 namespace AaronicSubstances\Kabomu\Exceptions;
 
+/**
+ * Exception thrown by instances of StandardQuasiHttpClient and
+ * StandardQuasiHttpServer classes, which can provide details of
+ * error in the form of numeric reason codes.
+ * 
+ * The reason codes in 0-9 which currently do not have an assigned meaning are reserved for use by this class. 
+ * All other numbers including negative values may be used as reason codes.
+ */
 class QuasiHttpException extends KabomuException {
 
     /**
@@ -34,6 +42,14 @@ class QuasiHttpException extends KabomuException {
     private const reasonCodeReserved0 = 0;
 
     // Redefine the exception so message isn't optional and code is set to a different default.
+
+    /**
+     * Creates a new instance with an error message,
+     * a reason code and any related previous exception.
+     * @param string $message the error message
+     * @param int $reasonCode reason code to use. Defaults to 1.
+     * @param \Throwable $previous optional cause of this exception
+     */
     public function __construct(string $message, int $code = 1, \Throwable $previous = null) {
         switch ($code) {
             case self::reasonCodeReserved5:
