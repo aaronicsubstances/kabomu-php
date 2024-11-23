@@ -359,7 +359,7 @@ class ProtocolUtilsInternal {
         catch (\Throwable $e) {
             throw new QuasiHttpException(
                 "invalid quasi http " .
-                ($isResponse ? "response" : "request") +
+                ($isResponse ? "response" : "request") .
                 " content length",
                 QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION,
                 $e);
@@ -377,8 +377,8 @@ class ProtocolUtilsInternal {
             }
         }
         else {
-            $unshift = implode($srcLeftOver);
-            if ($unshift) {
+            if ($srcLeftOver) {
+                $unshift = $srcLeftOver[0];
                 $readableStream.unread($unshift);
             }
         }
