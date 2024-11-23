@@ -64,7 +64,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
             }
 
             while (true) {
-                if (!empty($this->onDataPushes)) {
+                if ($this->onDataPushes) {
                     return array_shift($this->onDataPushes);
                 }
                 
@@ -72,7 +72,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
                     return null;
                 }
                 
-                if (!empty($this->initialData)) {
+                if ($this->initialData) {
                     $chunk = array_shift($this->initialData);
                 }
                 else {
@@ -115,7 +115,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
                     // return or proceed to loop,
                     // it doesn't matter, as chunks should
                     // be empty.
-                    if (!empty($this->chunks)) {
+                    if ($this->chunks) {
                         throw new ExpectationViolationException(
                             "expected chunks to be empty at this point");
                     }
@@ -216,7 +216,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
     }
 
     public function isReadable(): bool {
-        return $this->closed || (empty($this->onDataPushes) && $this->doneWithBackingStream);
+        return $this->closed || (!$this->onDataPushes && $this->doneWithBackingStream);
     }
 
     /**

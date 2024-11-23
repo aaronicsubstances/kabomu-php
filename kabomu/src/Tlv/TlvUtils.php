@@ -32,7 +32,7 @@ class TlvUtils {
      * @return string buffer with tag and length serialized
      */
     public static function encodeTagAndLength(int $tag, int $length): string {
-        if (!$tag || $tag < 0) {
+        if ($tag <= 0) {
             throw new \InvalidArgumentException("invalid tag: $tag");
         }
         if ($length < 0) {

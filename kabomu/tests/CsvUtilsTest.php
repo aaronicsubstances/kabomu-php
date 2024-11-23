@@ -17,11 +17,12 @@ class CsvUtilsTest extends TestCase {
     public static function createTestEscapeValueData(): array {
         return [
             ["", '""'],
+            ["0", "0"],
             ["d", "d"],
             ["\n", "\"\n\""],
             ["\r", "\"\r\""],
             ["m,n", "\"m,n\""],
-            ["m\"n", "\"m\"\"n\""]
+            ["m\"n", "\"m\"\"n\""],
         ];
     }
 
@@ -119,6 +120,13 @@ class CsvUtilsTest extends TestCase {
         );
         $expected = "\"a\nb,c\n\"\n" .
             "\"\n\"\",\"\",c\n\",\"head,tail,.\n\"\"\n\"\",\"\" c\"\"\"\"d \"\"\n\n\"\n";
+        $testData[] = [$rows, $expected];
+
+        // for case detected in encodeQuasiHttpHeaders
+        $rows = [
+            ["", "", "", "0"],
+        ];
+        $expected = '"","","",0'. "\n";
         $testData[] = [$rows, $expected];
 
         return $testData;

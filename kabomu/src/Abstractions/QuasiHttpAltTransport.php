@@ -19,26 +19,26 @@ interface QuasiHttpAltTransport {
      * prevent the need to write request headers
      * and body to a connection.
      */
-    function getRequestSerializer(): SerializerFunction;
+    function getRequestSerializer(): ?SerializerFunction;
 
     /**
      * Gets a function which can return true to prevent the
      * need to write response headers and body to a connection.
      */
-    function getResponseSerializer(): SerializerFunction;
+    function getResponseSerializer(): ?SerializerFunction;
 
     /**
      * Gets a function which can return a non-null request object to
      * prevent the need to read request headers from a connection.
      */
-    function getRequestDeserializer(): DeserializerFunction;
+    function getRequestDeserializer(): ?DeserializerFunction;
 
     /**
      * Gets a function which can return a non-null response object
      * to prevent the need to read response headers from  a
      * connection.
      */
-    function getResponseDeserializer(): DeserializerFunction;
+    function getResponseDeserializer(): ?DeserializerFunction;
 }
 
 interface SerializerFunction {

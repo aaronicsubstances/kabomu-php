@@ -8,6 +8,43 @@ use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
 
 class IOUtilsInternalTest extends AsyncTestCase  {
 
+    public function testReadBytesAtLeast() {
+        // arrange
+        $reader = createRandomizedReadInputStream("\x00\x01\x02\x03\x04\x05\x06\x07");
+        $leftOver = [];
+
+        // act
+        $data = IOUtilsInternal::readBytesAtLeast($reader, $leftOver, 3);
+
+        // assert
+        $this->assertSame(bin2hex("\x00\x01\x02"), bin2hex($data));
+        
+        // assert that zero length reading doesn't cause problems.
+        $data =  IOUtilsInternal::readBytesAtLeast($reader, $leftOver, 0);
+        $this->assertEmpty($data);
+
+        // act again
+        $data = IOUtilsInternal::readBytesAtLeast($reader, $leftOver, 3);
+        
+        // assert
+        $this->assertSame(bin2hex("\x03\x04\x05"), bin2hex($data));
+        
+        // act again
+        $data = IOUtilsInternal::readBytesAtLeast($reader, $leftOver, 2);
+        
+        // assert
+        $this->assertSame(bin2hex("\x06\x07"), bin2hex($data));
+
+        // assert that if we are done reading, there should be no chunk
+        // inside left over.
+        $this->assertEmpty($leftOver);
+
+        // test zero byte reads after end of read.
+        $data =  IOUtilsInternal::readBytesAtLeast($reader, $leftOver, 0);
+        $this->assertEmpty($data);
+        $this->assertEmpty($leftOver);
+    }
+
     public function testReadBytesFully() {
         // arrange
         $reader = createRandomizedReadInputStream("\x00\x01\x02\x03\x04\x05\x06\x07");

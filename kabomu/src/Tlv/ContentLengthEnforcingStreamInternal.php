@@ -61,7 +61,7 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
                 return null;
             }
 
-            if (!empty($this->initialData)) {
+            if ($this->initialData) {
                 $chunk = array_shift($this->initialData);
             }
             else {

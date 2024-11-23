@@ -53,7 +53,7 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
                 throw new ClosedException;
             }
 
-            if (!empty($this->outstanding)) {
+            if ($this->outstanding) {
                 return array_shift($this->outstanding);
             }
 
@@ -64,7 +64,7 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
             // skip over empty but non-null strings
             while (true) {
                 $chunk = $this->backingStream->read($cancellation);
-                if ($chunk === null || !empty($chunk)) {
+                if ($chunk !== "") {
                     break;
                 }
             }
@@ -84,7 +84,7 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
     }
 
     public function isReadable(): bool {
-        return $this->closed || (empty($this->outstanding) && $this->doneWithBackingStream);
+        return $this->closed || (!$this->outstanding && $this->doneWithBackingStream);
     }
 
     /**

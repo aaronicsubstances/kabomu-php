@@ -13,70 +13,64 @@ class IOUtilsInternal {
             throw new Exception("Received negative read length of " . $length);
         }
 
-        $origDestCount = count($dest);
+        if (!$length) {
+            return "";
+        }
+
         $remLength = $length;
-        $origDestCountUsed = 0;
+        $lastChunkLen = 0; // to avoid calling another strlen in the end.
+        $destCount = count($dest); // to avoid counting $dest items in the end.
 
-        while ($remLength > 0 && $origDestCountUsed < $origDestCount) {
-            $remLength -= strlen($dest[$origDestCountUsed]);
-            $origDestCountUsed++;
+        // ensure at most 1 entry in dest.
+        if ($destCount > 1) {
+            $dest = [ implode($dest) ];
+            $destCount = 1;
         }
 
-        if ($remLength <= 0) {
-            // allow zero-byte reads to proceed to touch the
-            // stream, rather than just return.
-            if ($origDestCount && !$length) {
-                return "";
-            }
-
-            $result = [];
-            for ($i = 0; $i < $origDestCountUsed - 1; $i++) {
-                $result[] = array_shift($dest);
-            }
-            if ($remLength) {
-                $lastChunk = $dest[$origDestCountUsed - 1];
-                $divide_pt = strlen($lastChunk) + $remLength;
-                $result[] = substr($lastChunk, 0, $divide_pt);
-                $dest[$origDestCountUsed - 1] = substr($lastChunk, $divide_pt);
-            }
-            else {
-                $result[] = array_shift($dest);
-            }
-
-            return implode($result);
+        if ($dest) {
+            $lastChunkLen = strlen($dest[0]);
+            $remLength -= $lastChunkLen;
         }
 
-        while (true) {
+        while ($remLength > 0) {
             $chunk = $source->read($cancellation);
             if ($chunk === null) {
-                break;
+                throw KabomuIOException::createEndOfReadError();
             }
+
             $dest[] = $chunk;
-            $remLength -= strlen($chunk);
-            if ($remLength <= 0) {
-                break;
-            }
+            $destCount++;
+
+            $lastChunkLen = strlen($chunk);
+            $remLength -= $lastChunkLen;
         }
 
-        if ($remLength > 0) {
-            throw KabomuIOException::createEndOfReadError();
-        }
+        // ensure at most 1 entry in dest in the end.
 
         // NB: reusing $dest for creating $fullChunk
-        // rather than creating another array like $result above.
+        // rather than creating another array.
 
         if ($remLength) {
-            $lastDestIdx = count($dest) - 1;
-            $lastChunk = $dest[$lastDestIdx];
+            $lastChunk = $dest[$destCount - 1];
 
-            $divide_pt = strlen($lastChunk) + $remLength;
-            $dest[$lastDestIdx] = substr($lastChunk, 0, $divide_pt);
+            $divide_pt = $lastChunkLen + $remLength;
+            $dest[$destCount - 1] = substr($lastChunk, 0, $divide_pt);
 
-            $fullChunk = implode($dest);
+            if ($destCount === 1) {
+                $fullChunk = $dest[0];
+            }
+            else {
+                $fullChunk = implode($dest);
+            }
             $dest = [ substr($lastChunk, $divide_pt) ];
         }
         else {
-            $fullChunk = implode($dest);
+            if ($destCount === 1) {
+                $fullChunk = $dest[0];
+            }
+            else {
+                $fullChunk = implode($dest);
+            }
             $dest = [];
         }
 
@@ -87,7 +81,7 @@ class IOUtilsInternal {
         $chunks = [];
         $fullChunk = self::readBytesAtLeast($source, $chunks, $length, $cancellation);
 
-        if (!empty($chunks)) {
+        if ($chunks) {
             $unshift = $chunks[0];
             $source->unread($unshift);
         }

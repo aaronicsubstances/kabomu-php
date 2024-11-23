@@ -5,25 +5,23 @@ namespace AaronicSubstances\Kabomu;
 class MiscUtilsInternal {
 
     public static function serializeInt32BE(int $v): string {
-        $dest = '';
-        $dest .= chr(0xFF & ($v >> 24));
-        $dest .= chr(0xFF &($v >> 16));
-        $dest .= chr(0xFF & ($v >> 8));
-        $dest .= chr(0xFF & $v);
+        $dest = chr(0xFF & ($v >> 24)) .
+            chr(0xFF &($v >> 16)) .
+            chr(0xFF & ($v >> 8)) .
+            chr(0xFF & $v);
         return $dest;
     }
 
     public static function deserializeInt32BE(string $data, int $offset): int {
-        $src = [
-            ord($data[$offset]),
-            ord($data[$offset + 1]),
-            ord($data[$offset + 2]),
-            ord($data[$offset + 3]),
-        ];
-        $v = (($src[0] & 0xFF) << 24) | 
-            (($src[1] & 0xFF) << 16) | 
-            (($src[2] & 0xFF) << 8) | 
-            ($src[3] & 0xFF);
+        $src0 = ord($data[$offset]);
+        $src1 = ord($data[$offset + 1]);
+        $src2 = ord($data[$offset + 2]);
+        $src3 = ord($data[$offset + 3]);
+
+        $v = (($src0 & 0xFF) << 24) |
+            (($src1 & 0xFF) << 16) |
+            (($src2 & 0xFF) << 8) |
+            ($src3 & 0xFF);
         if ($v >= 2147483648) {
             $v -= 4294967296;
         }

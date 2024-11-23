@@ -117,7 +117,7 @@ class CsvUtils {
 
             // create new value for current row,
             // but skip empty values between newlines, or between BOI and newline.
-            if ($nextValueStartIdx < $nextValueEndIdx || !$tokenIsNewline || !empty($currentRow)) {
+            if ($nextValueStartIdx < $nextValueEndIdx || !$tokenIsNewline || $currentRow) {
                 try {
                     $nextValue = self::unescapeValue(substr($csv, $nextValueStartIdx,
                         $nextValueEndIdx - $nextValueStartIdx));
@@ -187,7 +187,7 @@ class CsvUtils {
         }
 
         // add any leftover values to parsed csv rows.
-        if (!empty($currentRow)) {
+        if ($currentRow) {
             $parsedCsv[] = &$currentRow;
         }
 
@@ -233,7 +233,7 @@ class CsvUtils {
             // escape empty strings with two double quotes to resolve ambiguity
             // between an empty row and a row containing an empty string - otherwise both
             // serialize to the same CSV output.
-            return !$raw ? "\"\"" : $raw;
+            return $raw === "" ? "\"\"" : $raw;
         }
         return '"' . str_replace("\"", "\"\"", $raw) . '"';
     }

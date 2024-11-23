@@ -18,12 +18,12 @@ class ProtocolUtilsInternal {
 
     public static function runTimeoutScheduler(
             CustomTimeoutScheduler $timeoutScheduler, bool $forClient,
-            \Closure $proc): QuasiHttpResponse {
+            \Closure $proc): ?QuasiHttpResponse {
         $timeoutMsg = $forClient ? "send timeout" : "receive timeout";
         $result = $timeoutScheduler->runUnderTimeout($proc);
         if ($result) {
             $error = $result->getError();
-            if (!$error) {
+            if ($error) {
                 throw $error;
             }
             if ($result->isTimeout()) {
@@ -31,10 +31,7 @@ class ProtocolUtilsInternal {
                     QuasiHttpException::REASON_CODE_TIMEOUT);
             }
         }
-        $response = null;
-        if ($result) {
-            $response = $result->getResponse();
-        }
+        $response = $result?->getResponse();
         if ($forClient && !$response)
         {
             throw new QuasiHttpException(
@@ -45,7 +42,8 @@ class ProtocolUtilsInternal {
 
     public static function validateHttpHeaderSection(bool $isResponse,
             array $csv) {
-        if (empty($csv)) {
+        $csvCount = count($csv);
+        if (!$csvCount) {
             throw new ExpectationViolationException(
                 "expected csv to contain at least the special header");
         }
@@ -57,7 +55,7 @@ class ProtocolUtilsInternal {
                 "instead of $specialHeaderCount");
         }
         for ($i = 0; $i < $specialHeaderCount; $i++) {
-            $item = $specialHeader[i];
+            $item = $specialHeader[$i];
             if (!self::containsOnlyPrintableAsciiChars($item, $isResponse && $i === 2)) {
                 throw new QuasiHttpException(
                     "quasi http " .
@@ -68,7 +66,7 @@ class ProtocolUtilsInternal {
                     QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION);
             }
         }
-        for ($i = 1; $i < count($csv); $i++) {
+        for ($i = 1; $i < $csvCount; $i++) {
             $row = $csv[$i];
             $rowCount = count($row);
             if ($rowCount < 2) {
@@ -77,11 +75,15 @@ class ProtocolUtilsInternal {
                     "instead of $rowCount");
             }
             $headerName = $row[0];
+            if (preg_match('/^\s*[+-]?[0-9]/', $headerName)) {
+                throw new QuasiHttpException(
+                    "quasi http header name cannot start with a number: $headerName",
+                    QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION);
+            }
             if (!self::containsOnlyHeaderNameChars($headerName)) {
                 throw new QuasiHttpException(
                     "quasi http header name contains characters " .
-                    "other than hyphen and English alphabets: " .
-                    $headerName,
+                    "other than hyphen and English alphabets: $headerName",
                     QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION);
             }
             for ($j = 1; $j < $rowCount; $j++) {
@@ -142,24 +144,23 @@ class ProtocolUtilsInternal {
         $csv = [];
         $specialHeader = array();
         foreach ($reqOrStatusLine as $v) {
-            // beware of zero content length value
-            $specialHeader[] = $v !== null ? "$v" : "";
+            $specialHeader[] = "$v";
         }
         $csv[] = $specialHeader;
         if ($remainingHeaders) {
             foreach ($remainingHeaders as $key => $value) {
-                if (!$key) {
+                if ($key === null || $key === "") {
                     throw new QuasiHttpException(
                         "quasi http header name cannot be empty",
                         QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION);
                 }
-                if (empty($value)) {
+                if (!$value) {
                     continue;
                 }
                 $headerRow = array();
                 $headerRow[] = $key;
                 foreach ($value as $v) {
-                    if (!$v) {
+                    if ($v === null || $v === "") {
                         throw new QuasiHttpException(
                             "quasi http header value cannot be empty",
                             QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION);
@@ -173,13 +174,13 @@ class ProtocolUtilsInternal {
         self::validateHttpHeaderSection($isResponse, $csv);
 
         $serialized = MiscUtilsInternal::stringToBytes(
-            CsvUtils::serialize(csv));
+            CsvUtils::serialize($csv));
 
         return $serialized;
     }
 
     public static function decodeQuasiHttpHeaders(bool $isResponse,
-            string $buffer, int $length, array &$headersReceiver): string {
+            string $buffer, array &$headersReceiver): array {
         try {
             $csv = CsvUtils::deserialize(MiscUtilsInternal::bytesToString(
                 $buffer));
@@ -190,7 +191,8 @@ class ProtocolUtilsInternal {
                 QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION,
                 $e);
         }
-        if (empty($csv)) {
+        $csvCount = count($csv);
+        if (!$csvCount) {
             throw new QuasiHttpException(
                 "invalid quasi http headers",
                 QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION);
@@ -205,9 +207,8 @@ class ProtocolUtilsInternal {
         }
 
         // merge headers with the same normalized name in different rows.
-        $csvCount = count($csv);
         for ($i = 1; $i < $csvCount; $i++) {
-            $headerRow = $csv[i];
+            $headerRow = $csv[$i];
             $headerRowCount = count($headerRow);
             if ($headerRowCount < 2) {
                 continue;
@@ -222,7 +223,7 @@ class ProtocolUtilsInternal {
             }
         }
 
-        return $especialHeader;
+        return $specialHeader;
     }
 
     public static function writeQuasiHttpHeaders(
