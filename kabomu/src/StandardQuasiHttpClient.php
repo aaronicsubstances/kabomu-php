@@ -29,7 +29,7 @@ use AaronicSubstances\Kabomu\Exceptions\QuasiHttpException;
  */
 class StandardQuasiHttpClient {
 
-    private ?QuasiHttpClientTransport $transport;
+    private ?QuasiHttpClientTransport $transport = null;
 
     /**
      * Creates a new instance.
@@ -67,7 +67,7 @@ class StandardQuasiHttpClient {
      */
     public function send($remoteEndpoint,
             QuasiHttpRequest $request, ?QuasiHttpProcessingOptions $options): QuasiHttpResponse  {
-        return sendInternal($remoteEndpoint, $request, null, $options);
+        return $this->sendInternal($remoteEndpoint, $request, null, $options);
     }
 
     /**
@@ -75,17 +75,17 @@ class StandardQuasiHttpClient {
      * posssible to receive connection allocation information before
      * creating request.
      * @param mixed $remoteEndpoint the destination endpoint of the request
-     * @param \Closure $requestFunc a callback which receives any environment
-     * associated with the connection that is created.
-     * @param options $optional send options
+     * @param \Closure $requestFunc a callback which receives the environment of an established connection, and must
+     * return an instance of {@link QuasiHttpRequest}.
+     * @param ?QuasiHttpProcessingOptions $options optional send options
      * @return QuasiHttpResponse the quasi http response returned from the remote endpoint.
      * @throws MissingDependencyException if the transport property is null
      * @throws QuasiHttpException if an error occurs with request processing.
      */
     public function send2($remoteEndpoint,
             \Closure $requestFunc,
-            QuasiHttpProcessingOptions $options): QuasiHttpResponse {
-        return sendInternal($remoteEndpoint, null, $requestFunc, $options);
+            ?QuasiHttpProcessingOptions $options): QuasiHttpResponse {
+        return $this->sendInternal($remoteEndpoint, null, $requestFunc, $options);
     }
 
     private function sendInternal($remoteEndpoint, ?QuasiHttpRequest $request,
@@ -108,13 +108,13 @@ class StandardQuasiHttpClient {
             }
             $timeoutScheduler = $connection->getTimeoutScheduler();
             if ($timeoutScheduler) {
-                $proc = fn() => $this->processSend(
+                $proc = fn() => self::processSend(
                     $request, $requestFunc, $transport, $connection);
                 $response = ProtocolUtilsInternal::runTimeoutScheduler(
                     $timeoutScheduler, true, $proc);
             }
             else {
-                $response = $this->processSend($request, $requestFunc,
+                $response = self::processSend($request, $requestFunc,
                     $transport, $connection);
             }
             
@@ -135,7 +135,7 @@ class StandardQuasiHttpClient {
                 "encountered error during send request processing",
                 QuasiHttpException::REASON_CODE_GENERAL,
                 $e);
-            throw abortError;
+            throw $abortError;
         }
     }
 
@@ -151,6 +151,10 @@ class StandardQuasiHttpClient {
             if (!$request) {
                 throw new QuasiHttpException("no request");
             }
+            if (!($request instanceof QuasiHttpRequest)) {
+                throw new QuasiHttpException(
+                    "didn't get instance of QuasiHttpRequest class from custom request generator");
+            }
         }
 
         // send entire request first before
@@ -163,7 +167,7 @@ class StandardQuasiHttpClient {
         }
         $requestSerialized = false;
         if ($requestSerializer) {
-            $requestSerialized = $requestSerializer->serializeEntity($connection, $request);
+            $requestSerialized = $requestSerializer($connection, $request);
         }
         if (!$requestSerialized) {
             ProtocolUtilsInternal::writeEntityToTransport(
@@ -174,7 +178,11 @@ class StandardQuasiHttpClient {
         $response = null;
         $responseDeserializer = $altTransport?->getResponseDeserializer();
         if ($responseDeserializer) {
-            $response = $responseDeserializer->deserializeEntity($connection);
+            $response = $responseDeserializer($connection);
+            if ($response && !($response instanceof QuasiHttpResponse)) {
+                throw new QuasiHttpException(
+                    "didn't get instance of QuasiHttpResponse class from custom response deserializer");
+            }
         }
         if (!$response) {
             $response = ProtocolUtilsInternal::readEntityFromTransport(

@@ -21,12 +21,19 @@ interface QuasiHttpConnection {
     function getProcessingOptions(): ?QuasiHttpProcessingOptions;
 
     /**
-     * Gets an optional function which can be used by
+     * Gets an optional {@link \Closure} instance which can be used by
      * {@link StandardQuasiHttpClient} and
      * {@link StandardQuasiHttpServer} instances, to impose
      * timeouts on request processing.
+     * 
+     * It must return an instance of {@link TimeoutResult} which indicates
+     * whether a timeout or an error occurred, or which gives the
+     * return value of calling its only argument, which is another closure.
+     * 
+     * The closure takes as its only argument another closure to run under timeout, which
+     * has no parameters and returns an instance of {@link QuasiHttpResponse} class.
      */
-    function getTimeoutScheduler(): ?CustomTimeoutScheduler;
+    function getTimeoutScheduler(): ?\Closure;
 
     /**
      * Gets any environment variables that can control decisions

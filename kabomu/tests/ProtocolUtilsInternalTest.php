@@ -4,7 +4,6 @@ namespace AaronicSubstances\Kabomu;
 
 use Amp\PHPUnit\AsyncTestCase;
 
-use AaronicSubstances\Kabomu\Abstractions\CustomTimeoutScheduler;
 use AaronicSubstances\Kabomu\Abstractions\DefaultQuasiHttpResponse;
 use AaronicSubstances\Kabomu\Abstractions\DefaultTimeoutResult;
 use AaronicSubstances\Kabomu\Abstractions\TimeoutResult;
@@ -15,11 +14,9 @@ class ProtocolUtilsInternalTest extends AsyncTestCase {
     public function testRunTimeoutScheduler1() {
         $expected = new DefaultQuasiHttpResponse();
         $proc = fn() => $expected;
-        $instance = new class implements CustomTimeoutScheduler {
-            public function runUnderTimeout(\Closure $f): ?TimeoutResult {
-                $result = $f();
-                return new DefaultTimeoutResult(false, $result, null);
-            }
+        $instance = function (\Closure $f) {
+            $result = $f();
+            return new DefaultTimeoutResult(false, $result, null);
         };
         $actual = ProtocolUtilsInternal::runTimeoutScheduler(
             $instance, true, $proc);
@@ -29,11 +26,9 @@ class ProtocolUtilsInternalTest extends AsyncTestCase {
     public function testRunTimeoutScheduler2() {
         $expected = null;
         $proc = fn() => $expected;
-        $instance = new class implements CustomTimeoutScheduler {
-            public function runUnderTimeout(\Closure $f): ?TimeoutResult {
-                $result = $f();
-                return new DefaultTimeoutResult(false, $result, null);
-            }
+        $instance = function (\Closure $f) {
+            $result = $f();
+            return new DefaultTimeoutResult(false, $result, null);
         };
         $actual = ProtocolUtilsInternal::runTimeoutScheduler(
             $instance, false, $proc);
@@ -43,11 +38,7 @@ class ProtocolUtilsInternalTest extends AsyncTestCase {
     public function testRunTimeoutScheduler3() {
         $expected = null;
         $proc = fn() => $expected;
-        $instance = new class implements CustomTimeoutScheduler {
-            public function runUnderTimeout(\Closure $f): ?TimeoutResult {
-                return null;
-            }
-        };
+        $instance = fn (\Closure $f) => null;
         $actual = ProtocolUtilsInternal::runTimeoutScheduler(
             $instance, false, $proc);
         $this->assertNull($actual);
@@ -56,11 +47,7 @@ class ProtocolUtilsInternalTest extends AsyncTestCase {
     public function testRunTimeoutScheduler4() {
         $expected = null;
         $proc = fn() => $expected;
-        $instance = new class implements CustomTimeoutScheduler {
-            public function runUnderTimeout(\Closure $f): ?TimeoutResult {
-                return null;
-            }
-        };
+        $instance = fn (\Closure $f) => null;
 
         $this->expectException(QuasiHttpException::class);
         $this->expectExceptionMessage("no response from timeout scheduler");
@@ -73,11 +60,7 @@ class ProtocolUtilsInternalTest extends AsyncTestCase {
     public function testRunTimeoutScheduler5() {
         $expected = null;
         $proc = fn() => $expected;
-        $instance = new class implements CustomTimeoutScheduler {
-            public function runUnderTimeout(\Closure $f): ?TimeoutResult {
-                return new DefaultTimeoutResult(true, null, null);
-            }
-        };
+        $instance = fn (\Closure $f) => new DefaultTimeoutResult(true, null, null);
 
         $this->expectException(QuasiHttpException::class);
         $this->expectExceptionMessage("send timeout");
@@ -90,11 +73,7 @@ class ProtocolUtilsInternalTest extends AsyncTestCase {
     public function testRunTimeoutScheduler6() {
         $expected = null;
         $proc = fn() => $expected;
-        $instance = new class implements CustomTimeoutScheduler {
-            public function runUnderTimeout(\Closure $f): ?TimeoutResult {
-                return new DefaultTimeoutResult(true, null, null);
-            }
-        };
+        $instance = fn (\Closure $f) => new DefaultTimeoutResult(true, null, null);
 
         $this->expectException(QuasiHttpException::class);
         $this->expectExceptionMessage("receive timeout");
@@ -107,18 +86,27 @@ class ProtocolUtilsInternalTest extends AsyncTestCase {
     public function testRunTimeoutScheduler7() {
         $expected = null;
         $proc = fn() => $expected;
-        $instance = new class implements CustomTimeoutScheduler {
-            public function runUnderTimeout(\Closure $f): ?TimeoutResult {
-                return new DefaultTimeoutResult(true, null,
-                    new \InvalidArgumentException("risk"));
-            }
-        };
+        $instance = fn (\Closure $f) => new DefaultTimeoutResult(true, null,
+            new \InvalidArgumentException("risk"));
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("risk");
         
         ProtocolUtilsInternal::runTimeoutScheduler(
             $instance, false, $proc);
+    }
+
+    public function testRunTimeoutScheduler8() {
+        $expected = null;
+        $proc = fn() => $expected;
+        $instance = fn (\Closure $f) => "whatever";
+
+        $this->expectException(QuasiHttpException::class);
+        $this->expectExceptionMessage("didn't get instance of TimeoutResult class from timeout scheduler");
+        $this->expectExceptionCode(QuasiHttpException::REASON_CODE_GENERAL);
+        
+        ProtocolUtilsInternal::runTimeoutScheduler(
+            $instance, true, $proc);
     }
 
     /**

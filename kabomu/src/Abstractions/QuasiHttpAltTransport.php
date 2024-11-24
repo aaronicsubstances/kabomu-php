@@ -15,36 +15,50 @@ use AaronicSubstances\Kabomu\StandardQuasiHttpServer;
 interface QuasiHttpAltTransport {
 
     /**
-     * Gets a function which can return true to
-     * prevent the need to write request headers
+     * Returns null or a closure which takes an instance of {@link QuasiHttpConnection}
+     * as its first parameter, and an instance of {@link QuasiHttpRequest} as its second parameter,
+     * and returns a boolean.
+     * 
+     * The closure then can return true to
+     * prevent the default way of writing request headers
      * and body to a connection.
+     * 
+     * To proceed with the default processing the closure should return false.
      */
-    function getRequestSerializer(): ?SerializerFunction;
+    function getRequestSerializer(): ?\Closure ;
 
     /**
-     * Gets a function which can return true to prevent the
-     * need to write response headers and body to a connection.
+     * Returns null or a closure which takes an instance of {@link QuasiHttpConnection}
+     * as its first parameter, and an instance of {@link QuasiHttpResponse} as its second parameter,
+     * and returns a boolean.
+     * 
+     * The closure then can return true to
+     * prevent the default way of writing response headers
+     * and body to a connection.
+     * 
+     * To proceed with the default processing the closure should return false.
      */
-    function getResponseSerializer(): ?SerializerFunction;
+    function getResponseSerializer(): ?\Closure ;
 
     /**
-     * Gets a function which can return a non-null request object to
-     * prevent the need to read request headers from a connection.
+     * Returns null or a closure which takes an instance of {@link QuasiHttpConnection}
+     * as its only parameter, and returns null or an instance of {@link QuasiHttpRequest}.
+     * 
+     * The closure then can return a non-null request object to
+     * prevent the default way of reading request headers from a connection.
+     * 
+     * To proceed with the default processing the closure should return null.
      */
-    function getRequestDeserializer(): ?DeserializerFunction;
+    function getRequestDeserializer(): ?\Closure ;
 
     /**
-     * Gets a function which can return a non-null response object
-     * to prevent the need to read response headers from  a
-     * connection.
+     * Returns null or a closure which takes an instance of {@link QuasiHttpConnection}
+     * as its only parameter, and returns null or an instance of {@link QuasiHttpResponse}.
+     * 
+     * The closure then can return a non-null response object to
+     * prevent the default way of reading response headers from a connection.
+     * 
+     * To proceed with the default processing the closure should return null.
      */
-    function getResponseDeserializer(): ?DeserializerFunction;
-}
-
-interface SerializerFunction {
-    function serializeEntity(QuasiHttpConnection $connection, QuasiHttpRequest|QuasiHttpResponse $entity): bool;
-}
-
-interface DeserializerFunction {
-    function deserializeEntity(QuasiHttpConnection $connection): QuasiHttpRequest|QuasiHttpResponse|null;
+    function getResponseDeserializer(): ?\Closure ;
 }

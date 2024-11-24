@@ -9,6 +9,7 @@ use AaronicSubstances\Kabomu\Abstractions\QuasiHttpConnection;
 use AaronicSubstances\Kabomu\Abstractions\QuasiHttpProcessingOptions;
 use AaronicSubstances\Kabomu\Abstractions\QuasiHttpRequest;
 use AaronicSubstances\Kabomu\Abstractions\QuasiHttpResponse;
+use AaronicSubstances\Kabomu\Abstractions\TimeoutResult;
 use AaronicSubstances\Kabomu\Exceptions\ExpectationViolationException;
 use AaronicSubstances\Kabomu\Exceptions\MissingDependencyException;
 use AaronicSubstances\Kabomu\Exceptions\QuasiHttpException;
@@ -17,11 +18,15 @@ use AaronicSubstances\Kabomu\Tlv\TlvUtils;
 class ProtocolUtilsInternal {
 
     public static function runTimeoutScheduler(
-            CustomTimeoutScheduler $timeoutScheduler, bool $forClient,
+            \Closure $timeoutScheduler, bool $forClient,
             \Closure $proc): ?QuasiHttpResponse {
         $timeoutMsg = $forClient ? "send timeout" : "receive timeout";
-        $result = $timeoutScheduler->runUnderTimeout($proc);
+        $result = $timeoutScheduler($proc);
         if ($result) {
+            if (!($result instanceof TimeoutResult)) {
+                throw new QuasiHttpException(
+                    "didn't get instance of TimeoutResult class from timeout scheduler");
+            }
             $error = $result->getError();
             if ($error) {
                 throw $error;

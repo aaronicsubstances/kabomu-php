@@ -28,8 +28,8 @@ use AaronicSubstances\Kabomu\Exceptions\QuasiHttpException;
  * choice extends beyond TCP to include IPC mechanisms.
  */
 class StandardQuasiHttpServer {
-    private ?QuasiHttpApplication $application;
-    private ?QuasiHttpServerTransport $transport;
+    private ?\Closure $application = null;
+    private ?QuasiHttpServerTransport $transport = null;
 
     /**
      * Creates a new instance.
@@ -38,20 +38,24 @@ class StandardQuasiHttpServer {
     }
 
     /**
-     * Gets the function which is
+     * Gets the closure which is
      * responsible for processing requests to generate responses.
      * @return ?QuasiHttpApplication quasi http application
+     * 
+     * @see self::setApplication()
      */
-    public function getApplication(): ?QuasiHttpApplication {
+    public function getApplication(): ?\Closure {
         return $this->application;
     }
 
     /**
-     * Sets the function which is
-     * responsible for processing requests to generate responses.
-     * @param ?QuasiHttpApplication application quasi http application
+     * Sets the closure which is
+     * responsible for processing requests to generate responses. It takes
+     * an instance of {@link QuasiHttpRequest} and must return an instance of
+     * {@link QuasiHttpResponse} or null.
+     * @param ?\Closure closure which serves as quasi http application.
      */
-    public function setApplication(?QuasiHttpApplication $application) {
+    public function setApplication(?\Closure $application) {
         $this->application = $application;
     }
 
@@ -137,23 +141,31 @@ class StandardQuasiHttpServer {
         }
         $request = null;
         if ($requestDeserializer) {
-            $request = $requestDeserializer->deserializeEntity($connection);
+            $request = $requestDeserializer($connection);
+            if ($request && !($request instanceof QuasiHttpRequest)) {
+                throw new QuasiHttpException(
+                    "didn't get instance of QuasiHttpRequest class from custom request deserializer");
+            }
         }
         if (!$request) {
             $request = ProtocolUtilsInternal::readEntityFromTransport(
                 false, $transport->getReadableStream($connection), $connection);
         }
 
-        $response = $application->processRequest($request);
+        $response = $application($request);
         if (!$response) {
             throw new QuasiHttpException("no response");
+        }
+        if (!($response instanceof QuasiHttpResponse)) {
+            throw new QuasiHttpException(
+                "didn't get instance of QuasiHttpResponse class from quasi http application");
         }
 
         try {
             $responseSerialized = false;
             $responseSerializer = $altTransport?->getResponseSerializer();
             if ($responseSerializer) {
-                $responseSerialized = $responseSerializer->serializeEntity($connection, $response);
+                $responseSerialized = $responseSerializer($connection, $response);
             }
             if (!$responseSerialized) {
                 ProtocolUtilsInternal::writeEntityToTransport(

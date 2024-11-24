@@ -20,7 +20,8 @@
             "AaronicSubstances\\Kabomu\\": "tests/"
         },
         "files": [
-            "tests/functions.php"
+            "tests/helperFunctions.php",
+            "tests/helperClasses.php"
         ]
     },
     "authors": [

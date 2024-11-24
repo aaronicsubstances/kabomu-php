@@ -16,7 +16,7 @@ class DefaultQuasiHttpRequest implements QuasiHttpRequest {
     private ?array $environment = null;
     private ?\Closure $disposer = null;
 
-    public function getTarget() {
+    public function getTarget(): ?string {
         return $this->target;
     }
     public function setTarget(?string $target) {
