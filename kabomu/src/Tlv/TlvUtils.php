@@ -87,12 +87,12 @@ class TlvUtils {
      * @param mixed $stream the readable stream to read from
      * @param int $length the expected number of bytes to read from stream
      * argument. Must not be negative.
-     * @param ?array $initialData optional list of strings with which to prepend the $stream contents.
+     * @param ?string $initialData optional string with which to prepend the $stream contents.
      * @return mixed stream which enforces a certain length on
      * readable stream argument
      */
-    public static function createContentLengthEnforcingStream($stream, int $length, ?array $initialData = null) {
-        return new PushbackReadableStream(new ContentLengthEnforcingStreamInternal($stream, $length, $initialData));
+    public static function createContentLengthEnforcingStream($stream, int $length, ?string $initialData = null) {
+        return new ContentLengthEnforcingStreamInternal($stream, $length, $initialData);
     }
 
     /**
@@ -106,7 +106,7 @@ class TlvUtils {
      * stream argument.
      */
     public static function createMaxLengthEnforcingStream($stream, int $maxLength = 0) {
-        return new PushbackReadableStream(new MaxLengthEnforcingStreamInternal($stream, $maxLength));
+        return new MaxLengthEnforcingStreamInternal($stream, $maxLength);
     }
 
     /**
@@ -116,13 +116,13 @@ class TlvUtils {
      * @param int $expectedTag the tag of the byte chunks
      * @param ?int $tagToIgnore the tag of any optional byte chunk
      * preceding chunks with the expected tag.
-     * @param ?array $initialData optional list of strings with which to prepend the $stream contents.
+     * @param ?string $initialData optional string with which to prepend the $stream contents.
      * @return mixed stream which decodes TLV-encoded bytes chunks.
      */
     public static function createTlvDecodingReadableStream($stream,
-            int $expectedTag, ?int $tagToIgnore = null, ?array $initialData = null) {
-        return new PushbackReadableStream(new BodyChunkDecodingStreamInternal($stream, $expectedTag,
-            $tagToIgnore, $initialData));
+            int $expectedTag, ?int $tagToIgnore = null, ?string $initialData = null) {
+        return new BodyChunkDecodingStreamInternal($stream, $expectedTag,
+            $tagToIgnore, $initialData);
     }
 
     /**
@@ -133,6 +133,6 @@ class TlvUtils {
      * @return mixed stream which encodes byte chunks in TLV format
      */
     public static function createTlvEncodingReadableStream($stream, $tagToUse) {
-        return new PushbackReadableStream(new BodyChunkEncodingStreamInternal($stream, $tagToUse));
+        return new BodyChunkEncodingStreamInternal($stream, $tagToUse);
     }
 }

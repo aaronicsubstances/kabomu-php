@@ -239,7 +239,7 @@ class ProtocolUtilsInternal {
             ?int $maxHeadersSize) {
         $encodedHeaders = self::encodeQuasiHttpHeaders($isResponse,
             $reqOrStatusLine, $remainingHeaders);
-        if (!$maxHeaderSize || $maxHeadersSize < 0) {
+        if (!$maxHeadersSize || $maxHeadersSize < 0) {
             $maxHeadersSize = QuasiHttpUtils::DEFAULT_MAX_HEADERS_SIZE;
         }
 
@@ -341,13 +341,13 @@ class ProtocolUtilsInternal {
     public static function readEntityFromTransport(
             bool $isResponse, $readableStream,
             QuasiHttpConnection $connection): QuasiHttpRequest|QuasiHttpResponse {
-        if ($readableStream) {
+        if (!$readableStream) {
             throw new MissingDependencyException(
                 "no readable stream found for transport");
         }
 
         $headersReceiver = [];
-        $maxHeadersSize = $connection.getProcessingOptions()?->getMaxHeadersSize();
+        $maxHeadersSize = $connection->getProcessingOptions()?->getMaxHeadersSize();
         
         $srcLeftOver = [];
         $reqOrStatusLine = self::readQuasiHttpHeaders(
@@ -369,22 +369,23 @@ class ProtocolUtilsInternal {
                 QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION,
                 $e);
         }
+
+        $initialData = $srcLeftOver ? $srcLeftOver[0] : null;
         $body = null;
         if ($contentLength) {
             if ($contentLength > 0) {
                 $body = TlvUtils::createContentLengthEnforcingStream(
-                    $readableStream, $contentLength, $srcLeftOver);
+                    $readableStream, $contentLength, $initialData);
             }
             else {
                 $body = TlvUtils::createTlvDecodingReadableStream($readableStream,
                     TlvUtils::TAG_FOR_QUASI_HTTP_BODY_CHUNK,
-                    TlvUtils::TAG_FOR_QUASI_HTTP_BODY_CHUNK_EXT, $srcLeftOver);
+                    TlvUtils::TAG_FOR_QUASI_HTTP_BODY_CHUNK_EXT, $initialData);
             }
         }
         else {
             if ($srcLeftOver) {
-                $unshift = $srcLeftOver[0];
-                $readableStream.unread($unshift);
+                $readableStream->unread($initialData);
             }
         }
     

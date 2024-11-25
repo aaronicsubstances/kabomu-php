@@ -21,7 +21,7 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
     private readonly mixed $backingStream;
     private readonly int $contentLength;
 
-    private ?array $initialData;
+    private ?string $initialData;
     private int $bytesLeft;
 
     private bool $reading = false;
@@ -31,7 +31,7 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
     private readonly DeferredFuture $onClose;
     private bool $closed = FALSE;
 
-    public function __construct($backingStream, int $contentLength, ?array $initialData = null) {
+    public function __construct($backingStream, int $contentLength, ?string $initialData = null) {
         if (!$backingStream) {
             throw new \InvalidArgumentException("Expected a backing stream");
         }
@@ -61,12 +61,18 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
                 return null;
             }
 
-            if ($this->initialData) {
-                $chunk = array_shift($this->initialData);
+            if ($this->initialData !== null) {
+                $chunk = $this->initialData;
+                $this->initialData = null;
             }
             else {
                 // let zero content length result in read from backing stream
-                $chunk = $this->backingStream->read($cancellation);
+                if ($this->contentLength) {
+                    $chunk = $this->backingStream->read($cancellation);
+                }
+                else {
+                    $chunk = null;
+                }
             }
 
             if ($chunk === null) {
@@ -86,22 +92,16 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
                     $this->bytesLeft -= $chunkLen;
                 }
                 else {
-                    if ($this->contentLength) {
-                        $outstanding = substr($chunk, $this->bytesLeft - $chunkLen);
-                        $this->backingStream->unread($outstanding);
-                        $chunk = substr($chunk, 0, $this->bytesLeft);
-                    }
-                    else {
-                        $this->backingStream->unread($chunk);
-                        $chunk = null;
-                    }
+                    $outstanding = substr($chunk, $this->bytesLeft - $chunkLen);
+                    $this->backingStream->unread($outstanding);
+                    $chunk = substr($chunk, 0, $this->bytesLeft);
                     $this->bytesLeft = 0;
                 }
                 if (!$this->bytesLeft) {
                     $this->doneWithBackingStream = TRUE;
                 }
             }
-            
+
             return $chunk;
         }
         finally {

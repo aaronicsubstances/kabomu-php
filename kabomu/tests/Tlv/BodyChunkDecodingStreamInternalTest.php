@@ -5,8 +5,6 @@ namespace AaronicSubstances\Kabomu\Tlv;
 use Amp\ByteStream\ReadableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
-use AaronicSubstances\Kabomu\IOUtilsInternal;
-use AaronicSubstances\Kabomu\MiscUtilsInternal;
 use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
 
 class BodyChunkDecodingStreamInternalTest extends AsyncTestCase {
@@ -14,90 +12,9 @@ class BodyChunkDecodingStreamInternalTest extends AsyncTestCase {
     /**
      * @dataProvider createTestReadingData
     */
-    public function testReading($srcData, $expectedTag, $tagToIgnore, $expected) {
+    public function testReading($carryOvers, $srcData, $expectedTag, $tagToIgnore, $expected) {
         // arrange
-        $stream = \AaronicSubstances\Kabomu\createRandomizedReadInputStream($srcData, false);
-        $instance = TlvUtils::createTlvDecodingReadableStream(
-            $stream, $expectedTag, $tagToIgnore);
-
-        // act
-        $actual = \AaronicSubstances\Kabomu\readAllBytes($instance);
-
-        $this->assertSame(bin2hex($expected), bin2hex($actual));
-    }
-
-    public static function createTestReadingData() {
-        return [
-            [
-                "\x00\x00\x00\x89" .
-                    "\x00\x00\x00\x00", 
-                0x89, 5, ""
-            ],
-            [
-                "\x00\x00\x00\x15" .
-                    "\x00\x00\x00\x02" .
-                    "\x02\x03" .
-                    "\x00\x00\x00\x08" .
-                    "\x00\x00\x00\x00",
-                0x08, 0x15, ""
-            ],
-            [
-                "\x00\x00\x00\x08" .
-                    "\x00\x00\x00\x02" .
-                    "\x02\x03" .
-                    "\x00\x00\x00\x08" .
-                    "\x00\x00\x00\x00",
-                0x08, 0x15, "\x02\x03"
-            ],
-            [
-                "\x00\x00\x00\x08" .
-                    "\x00\x00\x00\x01" .
-                    "\x02" .
-                    "\x00\x00\x00\x08" .
-                    "\x00\x00\x00\x01" .
-                    "\x03" .
-                    "\x00\x00\x00\x08" .
-                    "\x00\x00\x00\x00",
-                0x08, 0x15, "\x02\x03"
-            ],
-            [
-                "\x00\x00\x3d\x15" .
-                    "\x00\x00\x00\x00" .
-                    "\x30\xa3\xb5\x17" .
-                    "\x00\x00\x00\x01" .
-                    "\x02" .
-                    "\x00\x00\x3d\x15" .
-                    "\x00\x00\x00\x07" .
-                    "\x00\x00\x00\x00\x00\x00\x00" .
-                    "\x30\xa3\xb5\x17" .
-                    "\x00\x00\x00\x01" .
-                    "\x03" .
-                    "\x00\x00\x3d\x15" .
-                    "\x00\x00\x00\x00" .
-                    "\x30\xa3\xb5\x17" .
-                    "\x00\x00\x00\x04" .
-                    "\x02\x03\x45\x62" .
-                    "\x00\x00\x3d\x15" .
-                    "\x00\x00\x00\x01" .
-                    "\x01" .
-                    "\x30\xa3\xb5\x17" .
-                    "\x00\x00\x00\x08" .
-                    "\x91\x10\x02\x03\x45\x62\x70\x87" .
-                    "\x30\xa3\xb5\x17" .
-                    "\x00\x00\x00\x00",
-                0x30a3b517, 0x3d15,
-                "\x02\x03\x02\x03\x45\x62\x91\x10" .
-                    "\x02\x03\x45\x62\x70\x87"
-            ]
-        ];
-    }
-
-    /**
-     * @dataProvider createTestReadingWithCarryOversData
-    */
-    public function testReadingWithCarryOvers($carryOvers, $srcData, $expectedTag, $tagToIgnore, $expected) {
-        // arrange
-        $stream = \AaronicSubstances\Kabomu\createRandomizedReadInputStream($srcData, false);
+        $stream = \AaronicSubstances\Kabomu\createRandomizedReadableBuffer($srcData, false);
         $instance = TlvUtils::createTlvDecodingReadableStream(
             $stream, $expectedTag, $tagToIgnore, $carryOvers);
 
@@ -106,10 +23,12 @@ class BodyChunkDecodingStreamInternalTest extends AsyncTestCase {
 
         $this->assertSame(bin2hex($expected), bin2hex($actual));
 
-        $this->assertEmpty(\AaronicSubstances\Kabomu\readAllBytes($stream));
+        // assert non-repeatability.
+        $actual = \AaronicSubstances\Kabomu\readAllBytes($instance);
+        $this->assertSame("", $actual);
     }
 
-    public static function createTestReadingWithCarryOversData() {
+    public static function createTestReadingData() {
         return [
             [
                 null,
@@ -118,8 +37,8 @@ class BodyChunkDecodingStreamInternalTest extends AsyncTestCase {
                 0x89, 5, ""
             ],
             [
-                ["\x00\x00\x00"],
-                "\x15" .
+                null,
+                "\x00\x00\x00\x15" .
                     "\x00\x00\x00\x02" .
                     "\x02\x03" .
                     "\x00\x00\x00\x08" .
@@ -127,17 +46,16 @@ class BodyChunkDecodingStreamInternalTest extends AsyncTestCase {
                 0x08, 0x15, ""
             ],
             [
-                ["\x00\x00\x00\x08" .
+                null,
+                "\x00\x00\x00\x08" .
                     "\x00\x00\x00\x02" .
-                    "\x02", 
-                "\x03" .
+                    "\x02\x03" .
                     "\x00\x00\x00\x08" .
-                    "\x00\x00\x00\x00"],
-                "",
+                    "\x00\x00\x00\x00",
                 0x08, 0x15, "\x02\x03"
             ],
             [
-                [],
+                '',
                 "\x00\x00\x00\x08" .
                     "\x00\x00\x00\x01" .
                     "\x02" .
@@ -177,6 +95,25 @@ class BodyChunkDecodingStreamInternalTest extends AsyncTestCase {
                 0x30a3b517, 0x3d15,
                 "\x02\x03\x02\x03\x45\x62\x91\x10" .
                     "\x02\x03\x45\x62\x70\x87"
+            ],
+            // test initialData
+            [
+                "\x00\x00\x00",
+                "\x15" .
+                    "\x00\x00\x00\x02" .
+                    "\x02\x03" .
+                    "\x00\x00\x00\x08" .
+                    "\x00\x00\x00\x00",
+                0x08, 0x15, ""
+            ],
+            [
+                "\x00\x00\x00\x08" .
+                    "\x00\x00\x00\x02" .
+                    "\x02\x03" .
+                    "\x00\x00\x00\x08" .
+                    "\x00\x00\x00\x00",
+                "",
+                0x08, 0x15, "\x02\x03"
             ]
         ];
     }
@@ -186,18 +123,17 @@ class BodyChunkDecodingStreamInternalTest extends AsyncTestCase {
     */
     public function testReadingWithLeftOvers($srcData, $expected, $leftOver) {
         // arrange
-        $stream = \AaronicSubstances\Kabomu\createUnreadEnabledReadableBuffer($srcData);
+        $stream = \AaronicSubstances\Kabomu\createReadableBuffer($srcData);
+        $stream = \AaronicSubstances\Kabomu\makeStreamUnreadEnabled($stream);
         $instance = TlvUtils::createTlvDecodingReadableStream(
             $stream, 1);
 
         // assert expected
         $actual = \AaronicSubstances\Kabomu\readAllBytes($instance);
-        $actual = MiscUtilsInternal::bytesToString($actual);
         $this->assertSame($expected, $actual);
 
         // assert left over
         $actual = \AaronicSubstances\Kabomu\readAllBytes($stream);
-        $actual = MiscUtilsInternal::bytesToString($actual);
         $this->assertSame($leftOver, $actual);
     }
 
@@ -248,9 +184,9 @@ class BodyChunkDecodingStreamInternalTest extends AsyncTestCase {
     }
 
     /**
-     * @dataProvider createTestDecodingForErrorsData
+     * @dataProvider createTestReadingForErrorsData
     */
-    public function testDecodingForErrors($srcData, $expectedTag, $tagToIgnore, $expectedError) {
+    public function testReadingForErrors($srcData, $expectedTag, $tagToIgnore, $expectedError) {
         $instance = new ReadableBuffer($srcData);
         $instance = TlvUtils::createTlvDecodingReadableStream(
             $instance, $expectedTag, $tagToIgnore);
@@ -261,7 +197,7 @@ class BodyChunkDecodingStreamInternalTest extends AsyncTestCase {
         \AaronicSubstances\Kabomu\readAllBytes($instance);
     }
 
-    public static function createTestDecodingForErrorsData() {
+    public static function createTestReadingForErrorsData() {
         return [
             [
                 "\x00\x00\x09\x00" .

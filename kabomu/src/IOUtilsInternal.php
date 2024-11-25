@@ -77,18 +77,6 @@ class IOUtilsInternal {
         return $fullChunk;
     }
 
-    public static function readBytesFully($source, int $length, Cancellation $cancellation = null): string {
-        $chunks = [];
-        $fullChunk = self::readBytesAtLeast($source, $chunks, $length, $cancellation);
-
-        if ($chunks) {
-            $unshift = $chunks[0];
-            $source->unread($unshift);
-        }
-
-        return $fullChunk;
-    }
-
     public static function copy($readableStream, $writableStream, $cancellation = null) {
         \Amp\ByteStream\pipe($readableStream, $writableStream, $cancellation);
     }

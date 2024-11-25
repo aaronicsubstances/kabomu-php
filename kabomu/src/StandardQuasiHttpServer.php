@@ -118,10 +118,10 @@ class StandardQuasiHttpServer {
                 $transport->releaseConnection($connection);
             }
             catch (\Throwable $ignore) { }
-            if ($e instanceof QuasiHttpException)
-            {
+            if ($e instanceof QuasiHttpException) {
                 throw $e;
             }
+            //throw $e;
             $abortError = new QuasiHttpException(
                 "encountered error during receive request processing",
                 QuasiHttpException::REASON_CODE_GENERAL,
@@ -130,9 +130,9 @@ class StandardQuasiHttpServer {
         }
     }
 
-    private static function processAccept(QuasiHttpApplication $application,
+    private static function processAccept(\Closure $application,
             QuasiHttpServerTransport $transport,
-            QuasiHttpConnection $connection): QuasiHttpResponse {
+            QuasiHttpConnection $connection) {
         $altTransport = null;
         $requestDeserializer = null;
         if ($transport instanceof QuasiHttpAltTransport) {

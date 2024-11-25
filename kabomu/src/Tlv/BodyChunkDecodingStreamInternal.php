@@ -22,7 +22,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
     private readonly mixed $backingStream;
     private readonly int $expectedTag;
     private readonly ?int $tagToIgnore;
-    private ?array $initialData;
+    private ?string $initialData;
 
     private ?array $onDataPushes;
 
@@ -38,7 +38,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
     private readonly DeferredFuture $onClose;
     private bool $closed = FALSE;
 
-    public function __construct($backingStream, int $expectedTag, ?int $tagToIgnore = null, ?array $initialData = null) {
+    public function __construct($backingStream, int $expectedTag, ?int $tagToIgnore = null, ?string $initialData = null) {
         if (!$backingStream) {
             throw new \InvalidArgumentException("Expected a backing stream");
         }
@@ -72,8 +72,9 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
                     return null;
                 }
                 
-                if ($this->initialData) {
-                    $chunk = array_shift($this->initialData);
+                if ($this->initialData !== null) {
+                    $chunk = $this->initialData;
+                    $this->initialData = null;
                 }
                 else {
                     $chunk = $this->backingStream->read($cancellation);

@@ -9,10 +9,29 @@ use PHPUnit\Framework\Assert;
 use AaronicSubstances\Kabomu\Abstractions\QuasiHttpProcessingOptions;
 use AaronicSubstances\Kabomu\Abstractions\QuasiHttpRequest;
 use AaronicSubstances\Kabomu\Abstractions\QuasiHttpResponse;
-use AaronicSubstances\Kabomu\Tlv\PushbackReadableStream;
 
 function readAllBytes($stream) {
     return \Amp\ByteStream\buffer($stream);
+}
+
+function readBytesFully($source, int $length, Cancellation $cancellation = null): string {
+    // allow zero-byte reads to proceed to touch the
+    // stream, rather than just return.
+
+    $chunks = [];
+    if (!$length) {
+        $chunk = $source->read($cancellation);
+        if ($chunk !== null) {
+            $chunks[] = $chunk;
+        }
+    }
+    $fullChunk = IOUtilsInternal::readBytesAtLeast($source, $chunks, $length, $cancellation);
+
+    if ($chunks) {
+        $source->unread($chunks[0]);
+    }
+
+    return $fullChunk;
 }
 
 function defer() {
@@ -20,7 +39,7 @@ function defer() {
     Future\await([$task]);
 }
 
-function createRandomizedReadInputStream($data, $enableUnread = true) {
+function createRandomizedReadableBuffer($data) {
     $inputStream = new \Amp\ByteStream\ReadableIterableStream((function () use (&$data) {
         defer();
         $offset = 0;
@@ -31,14 +50,23 @@ function createRandomizedReadInputStream($data, $enableUnread = true) {
             defer();
         }
     })());
-    if (!$enableUnread) {
-        return $inputStream;
-    }
-    return new PushbackReadableStream($inputStream);
+    return $inputStream;
 }
 
-function createUnreadEnabledReadableBuffer($data) {
-    return new PushbackReadableStream(new ReadableBuffer($data));
+function makeStreamUnreadEnabled($src) {
+    return new PushbackReadableInternal($src);
+}
+
+function createReadableBuffer($data) {
+    return new ReadableBuffer($data);
+}
+
+function createWritableBuffer() {
+    return new WritableBufferInternal();
+}
+
+function getWritableBufferContentsNow($dest) {
+    return $dest->getContentsNow();
 }
 
 function compareRequests(
@@ -73,7 +101,7 @@ function compareResponses(
 
 function compareBodies($actual, ?string $expectedBodyBytes) {
     if ($expectedBodyBytes === null || !$actual) {
-        Assert::assertSame($expected, $actual);
+        Assert::assertSame($expectedBodyBytes, $actual);
         return;
     }
     $actualBodyBytes = readAllBytes($actual);

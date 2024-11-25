@@ -2,7 +2,6 @@
 
 namespace AaronicSubstances\Kabomu\Tlv;
 
-use Amp\ByteStream\ReadableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
 use AaronicSubstances\Kabomu\IOUtilsInternal;
@@ -16,7 +15,7 @@ class MaxLengthEnforcingStreamInternalTest extends AsyncTestCase {
     */
     function testReading(int $maxLength, string $expected) {
         // arrange
-        $stream = \AaronicSubstances\Kabomu\createRandomizedReadInputStream(
+        $stream = \AaronicSubstances\Kabomu\createRandomizedReadableBuffer(
             MiscUtilsInternal::stringToBytes($expected));
         $instance = TlvUtils::createMaxLengthEnforcingStream(
             $stream, $maxLength);
@@ -51,7 +50,7 @@ class MaxLengthEnforcingStreamInternalTest extends AsyncTestCase {
     */
     public function testReadingForErrors(int $maxLength, string $srcData) {
         // arrange
-        $stream = new ReadableBuffer(
+        $stream = \AaronicSubstances\Kabomu\createReadableBuffer(
             MiscUtilsInternal::stringToBytes($srcData));
         $instance = TlvUtils::createMaxLengthEnforcingStream(
             $stream, $maxLength);
@@ -69,22 +68,5 @@ class MaxLengthEnforcingStreamInternalTest extends AsyncTestCase {
             [3, "abcd"],
             [5, "abcdefxyz"]
         ];
-    }
-
-    public function testZeroByteReads() {
-        $stream = \AaronicSubstances\Kabomu\createUnreadEnabledReadableBuffer("\x00\x01\x02\x04");
-        $instance = TlvUtils::createMaxLengthEnforcingStream($stream, 4);
-
-        $actual = IOUtilsInternal::readBytesFully($instance, 0);
-        $this->assertEmpty(bin2hex($actual));
-
-        $actual = IOUtilsInternal::readBytesFully($instance, 3);
-        $this->assertSame("000102", bin2hex($actual));
-
-        $actual = \AaronicSubstances\Kabomu\readAllBytes($instance);
-        $this->assertSame("04", bin2hex($actual));
-
-        $actual = IOUtilsInternal::readBytesFully($instance, 0);
-        $this->assertEmpty(bin2hex($actual));
     }
 }

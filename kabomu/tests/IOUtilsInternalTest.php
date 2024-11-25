@@ -10,7 +10,7 @@ class IOUtilsInternalTest extends AsyncTestCase  {
 
     public function testReadBytesAtLeast() {
         // arrange
-        $reader = createRandomizedReadInputStream("\x00\x01\x02\x03\x04\x05\x06\x07");
+        $reader = createRandomizedReadableBuffer("\x00\x01\x02\x03\x04\x05\x06\x07");
         $leftOver = [];
 
         // act
@@ -45,53 +45,17 @@ class IOUtilsInternalTest extends AsyncTestCase  {
         $this->assertEmpty($leftOver);
     }
 
-    public function testReadBytesFully() {
+    public function testReadBytesAtLeastForErrors() {
         // arrange
-        $reader = createRandomizedReadInputStream("\x00\x01\x02\x03\x04\x05\x06\x07");
-
-        // act
-        $data = IOUtilsInternal::readBytesFully($reader, 3);
-
-        // assert
-        $this->assertSame(bin2hex("\x00\x01\x02"), bin2hex($data));
-        
-        // assert that zero length reading doesn't cause problems.
-        $data =  IOUtilsInternal::readBytesFully($reader, 0);
-        $this->assertSame("", bin2hex($data));
-
-        // act again
-        $data = IOUtilsInternal::readBytesFully($reader, 3);
-        
-        // assert
-        $this->assertSame(bin2hex("\x03\x04\x05"), bin2hex($data));
-        
-        // act again
-        $data = IOUtilsInternal::readBytesFully($reader, 2);
-        
-        // assert
-        $this->assertSame(bin2hex("\x06\x07"), bin2hex($data));
-
-        // test zero byte reads.
-        $data =  IOUtilsInternal::readBytesFully($reader, 0);
-        $this->assertSame("", bin2hex($data));
-    }
-
-    public function testReadBytesFullyForErrors() {
-        // arrange
-        $reader = createUnreadEnabledReadableBuffer("\x00\x01\x02\x03\x04\x05\x06\x07");
-
-        // act
-        $data = IOUtilsInternal::readBytesFully($reader, 5);
-
-        // assert
-        $this->assertSame(bin2hex("\x00\x01\x02\x03\x04"), bin2hex($data));
+        $reader = createRandomizedReadableBuffer("\x00\x01\x02\x03\x04\x05\x06\x07");
 
         // arrange for unexpected end of read
         $this->expectException(KabomuIOException::class);
         $this->expectExceptionMessage("end of read");
 
         // act and assert
-        IOUtilsInternal::readBytesFully($reader, 5);
+        $leftOver = [];
+        $data = IOUtilsInternal::readBytesAtLeast($reader, $leftOver, 10);
     }
 
     /**
@@ -100,8 +64,8 @@ class IOUtilsInternalTest extends AsyncTestCase  {
     public function testCopy(string $srcData) {
         // arrange
         $expected = MiscUtilsInternal::stringToBytes($srcData);
-        $readerStream = createRandomizedReadInputStream($expected);
-        $writerStream = new WritableBuffer2();
+        $readerStream = createRandomizedReadableBuffer($expected);
+        $writerStream = createWritableBuffer();
 
         // act
         IOUtilsInternal::copy($readerStream, $writerStream);

@@ -2,7 +2,6 @@
 
 namespace AaronicSubstances\Kabomu\Tlv;
 
-use Amp\ByteStream\ReadableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
 use PHPUnit\Framework\TestCase;
@@ -147,7 +146,7 @@ class TlvUtilsTest extends AsyncTestCase {
     }
 
     public function testCreateTlvEncodingReadableStream() {
-        $backingStream = new ReadableBuffer("\x2c");
+        $backingStream = \AaronicSubstances\Kabomu\createReadableBuffer("\x2c");
         $expected = "\x00\x00\x00\x10" .
             "\x00\x00\x00\x01" .
             "\x2c" .
@@ -163,7 +162,7 @@ class TlvUtilsTest extends AsyncTestCase {
     */
     public function testBodyChunkCodecStreams(string $expected, int $tagToUse) {
         // arrange
-        $instance = \AaronicSubstances\Kabomu\createRandomizedReadInputStream(
+        $instance = \AaronicSubstances\Kabomu\createRandomizedReadableBuffer(
             MiscUtilsInternal::stringToBytes($expected));
         $instance = TlvUtils::createTlvEncodingReadableStream($instance, $tagToUse);
         $instance = TlvUtils::createTlvDecodingReadableStream($instance,
