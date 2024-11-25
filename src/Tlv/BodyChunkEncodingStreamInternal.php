@@ -9,6 +9,7 @@ use Amp\ForbidSerialization;
 use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\ReadableStreamIteratorAggregate;
+use Amp\ByteStream\PendingReadError;
 
 use AaronicSubstances\Kabomu\MiscUtilsInternal;
 use AaronicSubstances\Kabomu\Exceptions\ExpectationViolationException;
@@ -26,10 +27,10 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
 
     private bool $reading = false;
 
-    private bool $doneWithBackingStream = FALSE;
+    private bool $doneWithBackingStream = false;
 
     private readonly DeferredFuture $onClose;
-    private bool $closed = FALSE;
+    private bool $closed = false;
 
     public function __construct($backingStream, int $tagToUse) {
         if (!$backingStream) {
@@ -54,7 +55,7 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
             }
 
             if ($this->outstanding) {
-                return array_shift($this->outstanding);
+                return \array_shift($this->outstanding);
             }
 
             if ($this->doneWithBackingStream) {
@@ -70,7 +71,7 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
             }
             if ($chunk === null) {
                 $this->outstanding[] = MiscUtilsInternal::serializeInt32BE(0);
-                $this->doneWithBackingStream = TRUE;
+                $this->doneWithBackingStream = true;
             }
             else {
                 $this->outstanding[] = MiscUtilsInternal::serializeInt32BE(strlen($chunk));
@@ -93,7 +94,7 @@ class BodyChunkEncodingStreamInternal implements ReadableStream, \IteratorAggreg
      */
     public function close(): void {
         if (!$this->closed) {
-            $this->closed = TRUE;
+            $this->closed = true;
             $this->onClose->complete();
         }
     }

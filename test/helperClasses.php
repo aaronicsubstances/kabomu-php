@@ -102,7 +102,7 @@ class PushbackReadableInternal implements ReadableStream, \IteratorAggregate {
 
     private bool $reading = false;
 
-    private bool $closed = FALSE;
+    private bool $closed = false;
 
     public function __construct($backingStream) {
         if (!$backingStream) {
@@ -160,7 +160,7 @@ class PushbackReadableInternal implements ReadableStream, \IteratorAggregate {
 
     public function isReadable(): bool {
         if (!$this->closed && $this->buf) {
-            return TRUE;
+            return true;
         }
         return $this->backingStream->isReadable();
     }
@@ -170,7 +170,7 @@ class PushbackReadableInternal implements ReadableStream, \IteratorAggregate {
      * Whether pending operations are aborted or not is implementation dependent.
      */
     public function close(): void {
-        $this->closed = TRUE;
+        $this->closed = true;
         $this->backingStream->close();
     }
 

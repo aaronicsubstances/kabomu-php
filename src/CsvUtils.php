@@ -15,18 +15,18 @@ class CsvUtils {
         // set to end of input by default
         $tokenInfo[0] = self::TOKEN_EOI;
         $tokenInfo[1] = -1;
-        $csv_length = strlen($csv);
+        $csv_length = \strlen($csv);
         for ($i = $start; $i < $csv_length; $i++) {
             $c = $csv[$i];
             if (!$insideQuotedValue && $c === ',') {
                 $tokenInfo[0] = self::TOKEN_COMMA;
                 $tokenInfo[1] = $i;
-                return TRUE;
+                return true;
             }
             if (!$insideQuotedValue && $c === "\n") {
                 $tokenInfo[0] = self::TOKEN_LF;
                 $tokenInfo[1] = $i;
-                return TRUE;
+                return true;
             }
             if (!$insideQuotedValue && $c === "\r") {
                 if ($i + 1 < $csv_length && $csv[$i + 1] === "\n") {
@@ -36,7 +36,7 @@ class CsvUtils {
                     $tokenInfo[0] = self::TOKEN_CR;
                 }
                 $tokenInfo[1] = $i;
-                return TRUE;
+                return true;
             }
             if ($insideQuotedValue && $c === '"') {
                 if ($i + 1 < $csv_length && $csv[$i + 1] === '"') {
@@ -46,11 +46,11 @@ class CsvUtils {
                 else {
                     $tokenInfo[0] = self::TOKEN_QUOTE;
                     $tokenInfo[1] = $i;
-                    return TRUE;
+                    return true;
                 }
             }
         }
-        return FALSE;
+        return false;
     }
 
     /**
@@ -64,20 +64,20 @@ class CsvUtils {
         $parsedCsv = array();
         $currentRow = array();
         $nextValueStartIdx = 0;
-        $isCommaTheLastSeparatorSeen = FALSE;
+        $isCommaTheLastSeparatorSeen = false;
         $tokenInfo = array(0, 0);
-        $csv_length = strlen($csv);
+        $csv_length = \strlen($csv);
         while ($nextValueStartIdx < $csv_length) {
             // use to detect infinite looping
             $savedNextValueStartIdx = $nextValueStartIdx;
 
             // look for comma, quote or newline, whichever comes first.
             $newlineLen = 1;
-            $tokenIsNewline = FALSE;
-            $isCommaTheLastSeparatorSeen = FALSE;
+            $tokenIsNewline = false;
+            $isCommaTheLastSeparatorSeen = false;
 
-            $nextValueEndIdx = NULL;
-            $tokenType = NULL;
+            $nextValueEndIdx = null;
+            $tokenType = null;
 
             // only respect quote separator at the very beginning
             // of parsing a column value
@@ -85,33 +85,33 @@ class CsvUtils {
                 $tokenType = self::TOKEN_QUOTE;
                 // locate ending quote, while skipping over
                 // double occurences of quotes.
-                if (!self::locateNextToken($csv, $nextValueStartIdx + 1, TRUE, $tokenInfo)) {
-                    throw self::createCsvParseError(count($parsedCsv), count($currentRow),
+                if (!self::locateNextToken($csv, $nextValueStartIdx + 1, true, $tokenInfo)) {
+                    throw self::createCsvParseError(count($parsedCsv), \count($currentRow),
                         "ending double quote not found");
                 }
                 $nextValueEndIdx = $tokenInfo[1] + 1;
             }
             else {
-                self::locateNextToken($csv, $nextValueStartIdx, FALSE, $tokenInfo);
+                self::locateNextToken($csv, $nextValueStartIdx, false, $tokenInfo);
                 $tokenType = $tokenInfo[0];
                 if ($tokenType === self::TOKEN_COMMA) {
                     $nextValueEndIdx = $tokenInfo[1];
-                    $isCommaTheLastSeparatorSeen = TRUE;
+                    $isCommaTheLastSeparatorSeen = true;
                 }
                 else if ($tokenType === self::TOKEN_LF || $tokenType === self::TOKEN_CR) {
                     $nextValueEndIdx = $tokenInfo[1];
-                    $tokenIsNewline = TRUE;
+                    $tokenIsNewline = true;
                 }
                 else if ($tokenType === self::TOKEN_CRLF) {
                     $nextValueEndIdx = $tokenInfo[1];
-                    $tokenIsNewline = TRUE;
+                    $tokenIsNewline = true;
                     $newlineLen = 2;
                 }
                 else if ($tokenType === self::TOKEN_EOI) {
                     $nextValueEndIdx = $csv_length;
                 }
                 else {
-                    throw new \UnsupportedOperationException("unexpected token type: " . $tokenType);
+                    throw new \UnexpectedValueException("unexpected token type: " . $tokenType);
                 }
             }
 
@@ -119,11 +119,11 @@ class CsvUtils {
             // but skip empty values between newlines, or between BOI and newline.
             if ($nextValueStartIdx < $nextValueEndIdx || !$tokenIsNewline || $currentRow) {
                 try {
-                    $nextValue = self::unescapeValue(substr($csv, $nextValueStartIdx,
+                    $nextValue = self::unescapeValue(\substr($csv, $nextValueStartIdx,
                         $nextValueEndIdx - $nextValueStartIdx));
                 }
                 catch (\InvalidArgumentException $ex) {
-                    throw self::createCsvParseError(count($parsedCsv), count($currentRow), $ex->getMessage());
+                    throw self::createCsvParseError(\count($parsedCsv), \count($currentRow), $ex->getMessage());
                 }
                 $currentRow[] = $nextValue;
             }
@@ -138,7 +138,7 @@ class CsvUtils {
                 if ($nextValueStartIdx < $csv_length) {
                     $c = $csv[$nextValueStartIdx];
                     if ($c === ',') {
-                        $isCommaTheLastSeparatorSeen = TRUE;
+                        $isCommaTheLastSeparatorSeen = true;
                         $nextValueStartIdx++;
                     }
                     else if ($c === "\n" || $c === "\r") {
@@ -154,7 +154,7 @@ class CsvUtils {
                         }
                     }
                     else {
-                        throw self::createCsvParseError(count($parsedCsv), count($currentRow),
+                        throw self::createCsvParseError(\count($parsedCsv), \count($currentRow),
                             "unexpected character '$c' found at beginning");
                     }
                 }
@@ -175,7 +175,7 @@ class CsvUtils {
 
             // ensure input pointer has advanced.
             if ($savedNextValueStartIdx >= $nextValueStartIdx) {
-                throw self::createCsvParseError(count($parsedCsv), count($currentRow),
+                throw self::createCsvParseError(\count($parsedCsv), \count($currentRow),
                     "algorithm bug detected as parsing didn't make an advance. Potential for infinite " .
                     "looping.");
             }
@@ -210,17 +210,17 @@ class CsvUtils {
     public static function serialize(array $rows): string {
         $csvBuilder = [];
         foreach ($rows as $row) {
-            $addCommaSeparator = FALSE;
+            $addCommaSeparator = false;
             foreach ($row as $value) {
                 if ($addCommaSeparator) {
                     $csvBuilder[] = ",";
                 }
                 $csvBuilder[] = self::escapeValue($value);
-                $addCommaSeparator = TRUE;
+                $addCommaSeparator = true;
             }
             $csvBuilder[] = "\n";
         }
-        return join("", $csvBuilder);
+        return \join("", $csvBuilder);
     }
 
     /**
@@ -235,7 +235,7 @@ class CsvUtils {
             // serialize to the same CSV output.
             return $raw === "" ? "\"\"" : $raw;
         }
-        return '"' . str_replace("\"", "\"\"", $raw) . '"';
+        return '"' . \str_replace("\"", "\"\"", $raw) . '"';
     }
 
     /**
@@ -249,8 +249,8 @@ class CsvUtils {
         if (!self::doesValueContainSpecialCharacters($escaped)) {
             return $escaped;
         }
-        $escaped_length = strlen($escaped);
-        if ($escaped_length < 2 || !str_starts_with($escaped, "\"") || !str_ends_with($escaped, "\"")) {
+        $escaped_length = \strlen($escaped);
+        if ($escaped_length < 2 || !\str_starts_with($escaped, "\"") || !\str_ends_with($escaped, "\"")) {
             throw new \InvalidArgumentException("missing enclosing double quotes around csv value: " . $escaped);
         }
         $unescaped = [];
@@ -264,17 +264,17 @@ class CsvUtils {
                 $i++;
             }
         }
-        return implode("", $unescaped);
+        return \implode("", $unescaped);
     }
 
     private static function doesValueContainSpecialCharacters(string $s): bool {
-        $s_length = strlen($s);
+        $s_length = \strlen($s);
         for ($i = 0; $i < $s_length; $i++) {
             $c = $s[$i];
             if ($c === ',' || $c === '"' || $c === "\r" || $c === "\n") {
-                return TRUE;
+                return true;
             }
         }
-        return FALSE;
+        return false;
     }
 }

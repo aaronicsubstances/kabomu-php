@@ -58,7 +58,7 @@ class QuasiHttpException extends KabomuException {
             case self::reasonCodeReserved8:
             case self::reasonCodeReserved9:
             case self::reasonCodeReserved0:
-                throw new \invalidArgumentException("cannot use reserved reason code: $code");
+                throw new \InvalidArgumentException("cannot use reserved reason code: $code");
             default:
                 break;
         }

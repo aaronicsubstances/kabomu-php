@@ -3,6 +3,7 @@
     "description": "Kabomu library for PHP",
     "type": "library",
     "require": {
+        "amphp/amp": "^3.0",
         "amphp/byte-stream": "^2.1"
     },
     "require-dev": {
@@ -17,11 +18,11 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "AaronicSubstances\\Kabomu\\": "tests/"
+            "AaronicSubstances\\Kabomu\\": "test/"
         },
         "files": [
-            "tests/helperFunctions.php",
-            "tests/helperClasses.php"
+            "test/helperFunctions.php",
+            "test/helperClasses.php"
         ]
     },
     "authors": [

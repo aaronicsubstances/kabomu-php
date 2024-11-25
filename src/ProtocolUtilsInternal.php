@@ -47,13 +47,13 @@ class ProtocolUtilsInternal {
 
     public static function validateHttpHeaderSection(bool $isResponse,
             array $csv) {
-        $csvCount = count($csv);
+        $csvCount = \count($csv);
         if (!$csvCount) {
             throw new ExpectationViolationException(
                 "expected csv to contain at least the special header");
         }
         $specialHeader = $csv[0];
-        $specialHeaderCount = count($specialHeader);
+        $specialHeaderCount = \count($specialHeader);
         if ($specialHeaderCount !== 4) {
             throw new ExpectationViolationException(
                 "expected special header to have 4 values " .
@@ -73,14 +73,14 @@ class ProtocolUtilsInternal {
         }
         for ($i = 1; $i < $csvCount; $i++) {
             $row = $csv[$i];
-            $rowCount = count($row);
+            $rowCount = \count($row);
             if ($rowCount < 2) {
                 throw new ExpectationViolationException(
                     "expected row to have at least 2 values " .
                     "instead of $rowCount");
             }
             $headerName = $row[0];
-            if (preg_match('/^\s*[+-]?[0-9]/', $headerName)) {
+            if (\preg_match('/^\s*[+-]?[0-9]/', $headerName)) {
                 throw new QuasiHttpException(
                     "quasi http header name cannot start with a number: $headerName",
                     QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION);
@@ -104,9 +104,9 @@ class ProtocolUtilsInternal {
     }
 
     public static function containsOnlyHeaderNameChars(string $v): bool {
-        $vLen = strlen($v);
+        $vLen = \strlen($v);
         for ($i = 0; $i < $vLen; $i++) {
-            $c = ord($v[$i]);
+            $c = \ord($v[$i]);
             if ($c >= 0x30 && $c <= 0x39) {
                 // digits
             }
@@ -128,9 +128,9 @@ class ProtocolUtilsInternal {
 
     public static function containsOnlyPrintableAsciiChars(string $v,
             bool $allowSpace): bool {
-        $vLen = strlen($v);
+        $vLen = \strlen($v);
         for ($i = 0; $i < $vLen; $i++) {
-            $c = ord($v[$i]);
+            $c = \ord($v[$i]);
             if ($c < 0x20 || $c > 0x7e) {
                 return false;
             }
@@ -196,14 +196,14 @@ class ProtocolUtilsInternal {
                 QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION,
                 $e);
         }
-        $csvCount = count($csv);
+        $csvCount = \count($csv);
         if (!$csvCount) {
             throw new QuasiHttpException(
                 "invalid quasi http headers",
                 QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION);
         }
         $specialHeader = $csv[0];
-        if (count($specialHeader) < 4) {
+        if (\count($specialHeader) < 4) {
             throw new QuasiHttpException(
                 "invalid quasi http " .
                 ($isResponse ? "status" : "request") .
@@ -214,12 +214,12 @@ class ProtocolUtilsInternal {
         // merge headers with the same normalized name in different rows.
         for ($i = 1; $i < $csvCount; $i++) {
             $headerRow = $csv[$i];
-            $headerRowCount = count($headerRow);
+            $headerRowCount = \count($headerRow);
             if ($headerRowCount < 2) {
                 continue;
             }
-            $headerName = strtolower($headerRow[0]);
-            if (!array_key_exists($headerName, $headersReceiver)) {
+            $headerName = \strtolower($headerRow[0]);
+            if (!\array_key_exists($headerName, $headersReceiver)) {
                 $headersReceiver[$headerName] = array();
             }
             $headerValues = &$headersReceiver[$headerName];
@@ -244,7 +244,7 @@ class ProtocolUtilsInternal {
         }
 
         // finally check that byte count of csv doesn't exceed limit.
-        $encodedHeadersLen = strlen($encodedHeaders);
+        $encodedHeadersLen = \strlen($encodedHeaders);
         if ($encodedHeadersLen > $maxHeadersSize) {
             throw new QuasiHttpException("quasi http headers exceed " .
                 "max size ($encodedHeadersLen > $maxHeadersSize)",

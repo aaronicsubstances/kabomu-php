@@ -9,6 +9,7 @@ use Amp\ForbidSerialization;
 use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\ReadableStreamIteratorAggregate;
+use Amp\ByteStream\PendingReadError;
 
 use AaronicSubstances\Kabomu\MiscUtilsInternal;
 use AaronicSubstances\Kabomu\Exceptions\ExpectationViolationException;
@@ -28,7 +29,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
 
     private bool $reading = false;
 
-    private bool $doneWithBackingStream = FALSE;
+    private bool $doneWithBackingStream = false;
     
     private array $chunks;
     private bool $isDecodingHeader = true;
@@ -36,7 +37,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
     private bool $lastTagSeenIsExpected = true;
 
     private readonly DeferredFuture $onClose;
-    private bool $closed = FALSE;
+    private bool $closed = false;
 
     public function __construct($backingStream, int $expectedTag, ?int $tagToIgnore = null, ?string $initialData = null) {
         if (!$backingStream) {
@@ -65,7 +66,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
 
             while (true) {
                 if ($this->onDataPushes) {
-                    return array_shift($this->onDataPushes);
+                    return \array_shift($this->onDataPushes);
                 }
                 
                 if ($this->doneWithBackingStream) {
@@ -93,17 +94,17 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
 
     private function onData($chunk) {
         if (!$this->isDecodingHeader) {
-            $chunkLen = strlen($chunk);
-            $chunkLengthToUse = min($this->outstandingDataLength, $chunkLen);
+            $chunkLen = \strlen($chunk);
+            $chunkLengthToUse = \min($this->outstandingDataLength, $chunkLen);
             if ($chunkLengthToUse > 0) {
                 if ($this->lastTagSeenIsExpected) {
-                    $nextChunk = substr($chunk, 0, $chunkLengthToUse);
+                    $nextChunk = \substr($chunk, 0, $chunkLengthToUse);
                     $this->onDataPushes[] = $nextChunk;
                 }
                 $this->outstandingDataLength -= $chunkLengthToUse;
             }
             if ($chunkLengthToUse < $chunkLen) {
-                $carryOverChunk = substr($chunk, $chunkLengthToUse);
+                $carryOverChunk = \substr($chunk, $chunkLengthToUse);
                 $this->chunks[] = $carryOverChunk;
                 $this->isDecodingHeader = true;
                 // proceed to loop
@@ -150,22 +151,22 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
             }
             $this->lastTagSeenIsExpected = $decodedTag === $this->expectedTag;
             $this->outstandingDataLength = $tagAndLen[1];
-            $concatenatedLength = strlen($concatenated);
+            $concatenatedLength = \strlen($concatenated);
             $concatenatedLengthUsed = 8;
             if ($this->lastTagSeenIsExpected && !$this->outstandingDataLength) {
                 // done.
                 if ($concatenatedLengthUsed < $concatenatedLength) {
-                    $unshift = substr($concatenated, $concatenatedLengthUsed);
+                    $unshift = \substr($concatenated, $concatenatedLengthUsed);
                     $this->backingStream->unread($unshift);
                 }
                 $this->doneWithBackingStream = true;
                 return;
             }
-            $nextChunkLength = min($this->outstandingDataLength,
+            $nextChunkLength = \min($this->outstandingDataLength,
                 $concatenatedLength - $concatenatedLengthUsed);
             if ($nextChunkLength) {
                 if ($this->lastTagSeenIsExpected) {
-                    $nextChunk = substr($concatenated,
+                    $nextChunk = \substr($concatenated,
                         $concatenatedLengthUsed, $nextChunkLength);
                     $this->onDataPushes[] = $nextChunk;
                 }
@@ -175,7 +176,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
             if ($concatenatedLengthUsed < $concatenatedLength) {
                 // can't read more chunks yet, because there are
                 // more stuff inside concatenated
-                $carryOverChunk = substr($concatenated, $concatenatedLengthUsed);
+                $carryOverChunk = \substr($concatenated, $concatenatedLengthUsed);
                 $this->chunks[] = $carryOverChunk;
             }
             else {
@@ -196,13 +197,13 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
     }
 
     private function tryDecodeTagAndLength(array &$result) {
-        $totalLength = array_reduce($this->chunks, function($acc, $chunk) {
+        $totalLength = \array_reduce($this->chunks, function($acc, $chunk) {
             return $acc + strlen($chunk);
         }, 0);
         if ($totalLength < 8) {
             return null;
         }
-        $decodingBuffer = implode($this->chunks);
+        $decodingBuffer = \implode($this->chunks);
         $tag = MiscUtilsInternal::deserializeInt32BE($decodingBuffer, 0);
         if ($tag <= 0) {
             throw new KabomuIOException("invalid tag: $tag");
@@ -226,7 +227,7 @@ class BodyChunkDecodingStreamInternal implements ReadableStream, \IteratorAggreg
      */
     public function close(): void {
         if (!$this->closed) {
-            $this->closed = TRUE;
+            $this->closed = true;
             $this->onClose->complete();
         }
     }

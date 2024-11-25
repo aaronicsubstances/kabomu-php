@@ -7,6 +7,7 @@ use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\ReadableStreamIteratorAggregate;
+use Amp\ByteStream\PendingReadError;
 
 use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
 
@@ -49,7 +50,7 @@ class MaxLengthEnforcingStreamInternal implements ReadableStream, \IteratorAggre
             if ($chunk === null) {
                 return null;
             }
-            $chunkLen = strlen($chunk);
+            $chunkLen = \strlen($chunk);
             if ($chunkLen > $this->bytesLeft) {
                 throw new KabomuIOException(
                     "stream size exceeds limit of $this->maxLength bytes");

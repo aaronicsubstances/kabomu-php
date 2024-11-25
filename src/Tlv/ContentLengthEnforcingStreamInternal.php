@@ -9,6 +9,7 @@ use Amp\ForbidSerialization;
 use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\ReadableStreamIteratorAggregate;
+use Amp\ByteStream\PendingReadError;
 
 use AaronicSubstances\Kabomu\Exceptions\ExpectationViolationException;
 use AaronicSubstances\Kabomu\Exceptions\KabomuIOException;
@@ -26,10 +27,10 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
 
     private bool $reading = false;
 
-    private bool $doneWithBackingStream = FALSE;
+    private bool $doneWithBackingStream = false;
 
     private readonly DeferredFuture $onClose;
-    private bool $closed = FALSE;
+    private bool $closed = false;
 
     public function __construct($backingStream, int $contentLength, ?string $initialData = null) {
         if (!$backingStream) {
@@ -84,21 +85,21 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
                         "expected content length to be zero but found $this->contentLength"
                     );
                 }
-                $this->doneWithBackingStream = TRUE;
+                $this->doneWithBackingStream = true;
             }
             else {
-                $chunkLen = strlen($chunk);
+                $chunkLen = \strlen($chunk);
                 if ($chunkLen <= $this->bytesLeft) {
                     $this->bytesLeft -= $chunkLen;
                 }
                 else {
-                    $outstanding = substr($chunk, $this->bytesLeft - $chunkLen);
+                    $outstanding = \substr($chunk, $this->bytesLeft - $chunkLen);
                     $this->backingStream->unread($outstanding);
-                    $chunk = substr($chunk, 0, $this->bytesLeft);
+                    $chunk = \substr($chunk, 0, $this->bytesLeft);
                     $this->bytesLeft = 0;
                 }
                 if (!$this->bytesLeft) {
-                    $this->doneWithBackingStream = TRUE;
+                    $this->doneWithBackingStream = true;
                 }
             }
 
@@ -119,7 +120,7 @@ class ContentLengthEnforcingStreamInternal implements ReadableStream, \IteratorA
      */
     public function close(): void {
         if (!$this->closed) {
-            $this->closed = TRUE;
+            $this->closed = true;
             $this->onClose->complete();
         }
     }
