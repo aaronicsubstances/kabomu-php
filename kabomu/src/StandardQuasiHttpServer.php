@@ -121,9 +121,8 @@ class StandardQuasiHttpServer {
             if ($e instanceof QuasiHttpException) {
                 throw $e;
             }
-            //throw $e;
             $abortError = new QuasiHttpException(
-                "encountered error during receive request processing",
+                "encountered error during receive request processing: " . $e->getMessage(),
                 QuasiHttpException::REASON_CODE_GENERAL,
                 $e);
             throw $abortError;

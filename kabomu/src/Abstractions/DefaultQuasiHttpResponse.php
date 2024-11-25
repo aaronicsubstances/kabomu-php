@@ -17,7 +17,7 @@ class DefaultQuasiHttpResponse implements QuasiHttpResponse {
     private ?\Closure $disposer = null;
 
     public function getStatusCode(): ?int {
-        return $statusCode;
+        return $this->statusCode;
     }
     public function setStatusCode(?int $statusCode) {
         $this->statusCode = $statusCode;
@@ -38,7 +38,7 @@ class DefaultQuasiHttpResponse implements QuasiHttpResponse {
     }
 
     public function getHttpVersion(): ?string {
-        return $httpVersion;
+        return $this->httpVersion;
     }
     public function setHttpVersion(?string $httpVersion) {
         $this->httpVersion = $httpVersion;

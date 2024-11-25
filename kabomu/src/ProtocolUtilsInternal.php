@@ -402,9 +402,9 @@ class ProtocolUtilsInternal {
                     QuasiHttpException::REASON_CODE_PROTOCOL_VIOLATION,
                     $e);
             }
-            $response::setHttpStatusMessage($reqOrStatusLine[2]);
-            $response::setContentLength($contentLength);
-            $response::setHeaders($headersReceiver);
+            $response->setHttpStatusMessage($reqOrStatusLine[2]);
+            $response->setContentLength($contentLength);
+            $response->setHeaders($headersReceiver);
             if ($body) {
                 $bodySizeLimit = $connection->getProcessingOptions()?->getMaxResponseBodySize();
                 if (!$bodySizeLimit || $bodySizeLimit > 0) {
