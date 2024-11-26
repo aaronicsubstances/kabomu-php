@@ -56,7 +56,7 @@ class FileReceiver {
             AppLogger::info("File $fileName received successfully");
             $response->setStatusCode(QuasiHttpUtils::STATUS_CODE_OK);
             if (array_key_exists("echo-body", $request->getHeaders())) {
-                $responseBody = implode(",", $request->getHeaders());
+                $responseBody = implode(",", $request->getHeaders()["echo-body"]);
             }
         }
         else {

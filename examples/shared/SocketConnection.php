@@ -8,11 +8,12 @@ use Amp\Socket\Socket;
 use AaronicSubstances\Kabomu\Abstractions\DefaultQuasiHttpProcessingOptions;
 use AaronicSubstances\Kabomu\Abstractions\QuasiHttpConnection;
 use AaronicSubstances\Kabomu\Abstractions\QuasiHttpProcessingOptions;
+use AaronicSubstances\Kabomu\Abstractions\QuasiHttpResponse;
 use AaronicSubstances\Kabomu\QuasiHttpUtils;
 
 class SocketConnection implements QuasiHttpConnection {
     private readonly Socket $socket;
-    private readonly DeferredCancellation $connectCancellation;
+    private readonly ?DeferredCancellation $connectCancellation;
     private readonly QuasiHttpProcessingOptions $processingOptions;
     private readonly ?\Closure $timeoutScheduler;
 

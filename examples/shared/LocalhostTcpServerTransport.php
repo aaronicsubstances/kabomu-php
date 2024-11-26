@@ -54,7 +54,7 @@ class LocalhostTcpServerTransport implements QuasiHttpServerTransport {
         try {
             $connection = new SocketConnection($socket, null,
                 $this->defaultProcessingOptions, null);
-            $quasiHttpServer->acceptConnection($connection);
+            $this->quasiHttpServer->acceptConnection($connection);
         }
         catch (\Throwable $e) {
             AppLogger::warning("connection processing error", [ 'exception'=> $e ]);

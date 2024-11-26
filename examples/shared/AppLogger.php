@@ -17,7 +17,7 @@ class AppLogger {
         }
         self::$initialized = true;
 
-        self::$logger = new Logger('my_logger');
+        self::$logger = new Logger('shared');
 
         // Now add some handlers
         $stream = new StreamHandler('php://stdout', Level::Debug);

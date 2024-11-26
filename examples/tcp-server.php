@@ -11,9 +11,6 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
 
-use function Amp\async;
-use function Amp\Future\await;
-
 use AaronicSubstances\Kabomu\Abstractions\DefaultQuasiHttpProcessingOptions;
 use AaronicSubstances\Kabomu\StandardQuasiHttpServer;
 
@@ -48,11 +45,9 @@ try {
     $transport->start();
     AppLogger::info("Started Tcp.FileServer at $port");
 
-    $task = async(function() {
-        print "Press ENTER to exit: ";
-        fgets(STDIN);
-    });
-    await([ $task ]);
+    print "Press ENTER to exit" . PHP_EOL;
+    $readableStream = new Amp\ByteStream\ReadableResourceStream(STDIN);
+    $readableStream->read();
 }
 catch (\Throwable $e) {
     AppLogger::error("Fatal error encountered", [ 'exception'=> $e ]);
