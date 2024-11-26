@@ -9,3 +9,5 @@ composer-require-checker.phar
 phpdoc.xml
 .phpunit.cache
 .vscode/*
+.env
+logs

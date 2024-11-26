@@ -1,0 +1,24 @@
+{
+    "name": "aaronicsubstances/shared",
+    "description": "",
+    "version": "1.0.0",
+    "require": {
+        "monolog/monolog": "^3.8",
+        "amphp/amp": "^3.0",
+        "amphp/byte-stream": "^2.1",
+        "amphp/file": "^3.1",
+        "amphp/socket": "^2.3",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "AaronicSubstances\\Kabomu\\Examples\\Shared\\": "shared/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Aaron Baffour-Awuah"
+        }
+    ]
+}

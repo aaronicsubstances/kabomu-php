@@ -132,7 +132,7 @@ class StandardQuasiHttpClient {
                 throw $e;
             }
             $abortError = new QuasiHttpException(
-                "encountered error during send request processing: " . $e->getMessage(),
+                "encountered error during send request processing",
                 QuasiHttpException::REASON_CODE_GENERAL,
                 $e);
             throw $abortError;
