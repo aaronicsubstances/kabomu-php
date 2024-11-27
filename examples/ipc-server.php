@@ -7,7 +7,7 @@ if (php_sapi_name() !== 'cli') {
 require __DIR__ . '/vendor/autoload.php';
 
 // uncomment this to test with local source files of kabomu
-require __DIR__ . '/../vendor/autoload.php';
+//require __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
 

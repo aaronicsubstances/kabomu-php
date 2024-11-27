@@ -1,6 +1,6 @@
 # Kabomu Library for PHP
 
-This is a port of the Kabomu library originally written in C#.NET to PHP 8.1 and above.
+This is a port of the Kabomu library originally written in C#.NET to PHP 8.1.30 and above (first tested with PHP CLI 8.3.6 and Ubuntu 24.04.1 LTS).
 
 In a nutshell, Kabomu enables building quasi web applications that can connect endpoints within localhost and even within an OS process, through IPC mechanisms other than TCP.
 
