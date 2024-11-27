@@ -13,10 +13,14 @@ use AaronicSubstances\Kabomu\QuasiHttpUtils;
 class FileReceiver {
     private readonly mixed $remoteEndpoint;
     private readonly string $downloadDirPath;
+    private readonly string $pathForRemoteEndpoint;
 
     public function __construct($remoteEndpoint, string $downloadDirPath) {
         $this->remoteEndpoint = $remoteEndpoint;
         $this->downloadDirPath = $downloadDirPath;
+
+        // just in case remote endpoint contains invalid file path characters...
+        $this->pathForRemoteEndpoint = preg_replace('/\W/', '_', "" . $remoteEndpoint);
     }
 
     public function processRequest(QuasiHttpRequest $request): QuasiHttpResponse {
@@ -28,14 +32,15 @@ class FileReceiver {
         $transferError = null;
         try {
             // ensure directory exists.
-            // just in case remote endpoint contains invalid file path characters...
-            $pathForRemoteEndpoint = preg_replace('/\W/', '_', "" . $this->remoteEndpoint);
-            $directory = $this->downloadDirPath . DIRECTORY_SEPARATOR . $pathForRemoteEndpoint;
+            $directory = $this->downloadDirPath . DIRECTORY_SEPARATOR . $this->pathForRemoteEndpoint;
+            // NB: results of realpath, is_dir and file_exists are cached by PHP,
+            // and so deletion of directory doesn't immediately change their results.
             if (!is_dir($directory)) {
                 if (!mkdir($directory, 0777, true)) {
                     throw new \Exception("Could not create directory at $directory");
                 }
             }
+
             $p = $directory . DIRECTORY_SEPARATOR . $fileName;
             $fileStream = \Amp\File\openFile($p, 'w');
             try {

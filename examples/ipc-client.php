@@ -16,30 +16,28 @@ use AaronicSubstances\Kabomu\StandardQuasiHttpClient;
 
 use AaronicSubstances\Kabomu\Examples\Shared\AppLogger;
 use AaronicSubstances\Kabomu\Examples\Shared\FileSender;
-use AaronicSubstances\Kabomu\Examples\Shared\LocalhostTcpClientTransport;
+use AaronicSubstances\Kabomu\Examples\Shared\UnixDomainClientTransport;
 
 $dotenv = Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
 
-$serverPort = array_key_exists('TCP_PORT', $_ENV) ?
-    intval($_ENV['TCP_PORT']) :
-    5001;
+$serverIpcPath = $_ENV['IPC_PATH'] ?? "logs/34dc4fb1-71e0-4682-a64f-52d2635df2f5.sock";
 
 $uploadDirPath = $_ENV['UPLOAD_DIR'] ?? "logs/client";
 
 $defaultSendOptions = new DefaultQuasiHttpProcessingOptions();
 $defaultSendOptions->setTimeoutMillis(5_000);
 
-$transport = new LocalhostTcpClientTransport();
+$transport = new UnixDomainClientTransport();
 $transport->setDefaultSendOptions($defaultSendOptions);
 
 $instance = new StandardQuasiHttpClient();
 $instance->setTransport($transport);
 
 try {
-    AppLogger::info("Connecting Tcp.FileClient to $serverPort...");
+    AppLogger::info("Connecting Ipc.FileClient to $serverIpcPath...");
 
-    FileSender::startTransferringFiles($instance, $serverPort, $uploadDirPath);
+    FileSender::startTransferringFiles($instance, $serverIpcPath, $uploadDirPath);
 }
 catch (\Throwable $e) {
     AppLogger::error("Fatal error encountered", [ 'exception'=> $e ]);
