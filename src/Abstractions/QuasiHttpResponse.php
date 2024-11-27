@@ -95,5 +95,8 @@ interface QuasiHttpResponse extends CustomDisposable {
      */
     function setEnvironment(?array $environment);
 
+    /**
+     * Called to free up resources, e.g. streams.
+     */
     function release();
 }

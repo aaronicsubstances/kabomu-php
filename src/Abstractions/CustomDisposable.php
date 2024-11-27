@@ -19,7 +19,7 @@ interface CustomDisposable {
      * Sets a function which if invoked,
      * performs any needed clean up operation on resources held
      * by the instance.
-     * @param ?\Closure value
+     * @param ?\Closure $value
      */
     function setDisposer(?\Closure $value);
 }

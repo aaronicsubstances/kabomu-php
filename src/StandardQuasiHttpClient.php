@@ -19,7 +19,7 @@ use AaronicSubstances\Kabomu\Exceptions\QuasiHttpException;
  * defined by the Kabomu library.
  *
  * This class provides the client facing side of networking for end users.
- * It is the complement to the  {@link StandardQuasiHttpServer} class for
+ * It is the complement to the  {@link \AaronicSubstances\Kabomu\StandardQuasiHttpServer} class for
  * supporting the semantics of HTTP client libraries
  * whiles enabling underlying transport options beyond TCP.
  *
@@ -66,7 +66,7 @@ class StandardQuasiHttpClient {
      * @throws QuasiHttpException if an error occurs with request processing.
      */
     public function send($remoteEndpoint,
-            QuasiHttpRequest $request, ?QuasiHttpProcessingOptions $options): QuasiHttpResponse  {
+            QuasiHttpRequest $request, ?QuasiHttpProcessingOptions $options = null): QuasiHttpResponse  {
         return $this->sendInternal($remoteEndpoint, $request, null, $options);
     }
 
@@ -76,7 +76,7 @@ class StandardQuasiHttpClient {
      * creating request.
      * @param mixed $remoteEndpoint the destination endpoint of the request
      * @param \Closure $requestFunc a callback which receives the environment of an established connection, and must
-     * return an instance of {@link QuasiHttpRequest}.
+     * return an instance of {@link \AaronicSubstances\Kabomu\Abstractions\QuasiHttpRequest}.
      * @param ?QuasiHttpProcessingOptions $options optional send options
      * @return QuasiHttpResponse the quasi http response returned from the remote endpoint.
      * @throws MissingDependencyException if the transport property is null
@@ -84,7 +84,7 @@ class StandardQuasiHttpClient {
      */
     public function send2($remoteEndpoint,
             \Closure $requestFunc,
-            ?QuasiHttpProcessingOptions $options): QuasiHttpResponse {
+            ?QuasiHttpProcessingOptions $options = null): QuasiHttpResponse {
         return $this->sendInternal($remoteEndpoint, null, $requestFunc, $options);
     }
 

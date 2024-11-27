@@ -3,7 +3,7 @@
 namespace AaronicSubstances\Kabomu\Abstractions;
 
 /**
- * Provides default implementation of the {@link QuasiHttpProcessingOptions}
+ * Provides default implementation of the {@link \AaronicSubstances\Kabomu\Abstractions\QuasiHttpProcessingOptions}
  * interface.
  */
 class DefaultQuasiHttpProcessingOptions implements QuasiHttpProcessingOptions {

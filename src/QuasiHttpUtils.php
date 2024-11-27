@@ -146,9 +146,9 @@ class QuasiHttpUtils {
     /**
      * Merges two sources of processing options together, unless one of
      * them is null, in which case it returns the non-null one.
-     * @param ?QuasiHttpProcessingOptions preferred options object whose valid property values will
+     * @param ?QuasiHttpProcessingOptions $preferred options object whose valid property values will
      * make it to merged result
-     * @param ?QuasiHttpProcessingOptions fallback options object whose valid property
+     * @param ?QuasiHttpProcessingOptions $fallback options object whose valid property
      * values will make it to merged result, if corresponding property
      * on preferred argument are invalid.
      * @return ?QuasiHttpProcessingOptions merged options

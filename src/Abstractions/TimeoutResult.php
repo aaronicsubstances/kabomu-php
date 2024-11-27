@@ -4,9 +4,7 @@ namespace AaronicSubstances\Kabomu\Abstractions;
 
 /**
  * Represents result of using timeout API as represented by
- * {@link QuasiHttpConnection::getTimeoutScheduler()} method.
- * 
- * @see QuasiHttpConnection::getTimeoutScheduler()
+ * {@link \AaronicSubstances\Kabomu\Abstractions\QuasiHttpConnection::getTimeoutScheduler()} method.
  */
 interface TimeoutResult {
 
@@ -17,16 +15,16 @@ interface TimeoutResult {
     function isTimeout(): bool;
 
     /**
-     * Gets the value returned by the function argument to the
-     * timeout API represented by an instance of the
-     * {@link CustomTimeoutScheduler} class.
+     * Gets the value returned by the closure argument to the
+     * timeout API as represented by
+     * {@link \AaronicSubstances\Kabomu\Abstractions\QuasiHttpConnection::getTimeoutScheduler()} method.
      */
     function getResponse(): ?QuasiHttpResponse;
 
     /**
-     * Gets any error which was thrown by function argument to the
-     * timeout API represented by an instance of the
-     * {@link CustomTimeoutScheduler} class.
+     * Gets any error which was thrown by closure argument to the
+     * timeout API as represented by
+     * {@link \AaronicSubstances\Kabomu\Abstractions\QuasiHttpConnection::getTimeoutScheduler()} method.
      */
     function getError(): ?\Throwable;
 }

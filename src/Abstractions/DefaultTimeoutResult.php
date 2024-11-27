@@ -4,7 +4,7 @@ namespace AaronicSubstances\Kabomu\Abstractions;
 
 /**
  * Provides default implementation of the
- * {@link TimeoutResult} interface, in which properties are immutable.
+ * {@link \AaronicSubstances\Kabomu\Abstractions\TimeoutResult} interface, in which properties are immutable.
  */
 class DefaultTimeoutResult implements TimeoutResult {
     private readonly bool $timeout;

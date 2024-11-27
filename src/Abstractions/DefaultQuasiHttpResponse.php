@@ -3,7 +3,7 @@
 namespace AaronicSubstances\Kabomu\Abstractions;
 
 /**
- * Provides default implementation of {@link QuasiHttpResponse}
+ * Provides default implementation of {@link \AaronicSubstances\Kabomu\Abstractions\QuasiHttpResponse}
  * interface.
  */
 class DefaultQuasiHttpResponse implements QuasiHttpResponse {

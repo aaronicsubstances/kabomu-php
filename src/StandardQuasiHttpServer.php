@@ -19,7 +19,7 @@ use AaronicSubstances\Kabomu\Exceptions\QuasiHttpException;
  * defined by the Kabomu library.
  *
  * This class provides the server facing side of networking for end users.
- * It is the complement to the {@link StandardQuasiHttpClient} class for
+ * It is the complement to the {@link \AaronicSubstances\Kabomu\StandardQuasiHttpClient} class for
  * providing HTTP semantics whiles enabling underlying transport options
  * beyond TCP.
  *
@@ -40,7 +40,7 @@ class StandardQuasiHttpServer {
     /**
      * Gets the closure which is
      * responsible for processing requests to generate responses.
-     * @return ?QuasiHttpApplication quasi http application
+     * @return ?\Closure quasi http application
      * 
      * @see self::setApplication()
      */
@@ -51,8 +51,8 @@ class StandardQuasiHttpServer {
     /**
      * Sets the closure which is
      * responsible for processing requests to generate responses. It takes
-     * an instance of {@link QuasiHttpRequest} and must return an instance of
-     * {@link QuasiHttpResponse} or null.
+     * an instance of {@link \AaronicSubstances\Kabomu\Abstractions\QuasiHttpRequest} and must return an instance of
+     * {@link \AaronicSubstances\Kabomu\Abstractions\QuasiHttpResponse} or null.
      * @param ?\Closure closure which serves as quasi http application.
      */
     public function setApplication(?\Closure $application) {
@@ -81,7 +81,7 @@ class StandardQuasiHttpServer {
 
     /**
      * Used to process incoming connections from quasi http server transports.
-     * @param QuasiHttpConnection connection represents a quasi http connection
+     * @param QuasiHttpConnection $connection represents a quasi http connection
      * @throws MissingDependencyException if the transport property
      * or the application property is null.
      * @throws QuasiHttpException if an error occurs with request processing.
