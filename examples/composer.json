@@ -2,7 +2,7 @@
     "name": "aaronicsubstances/shared",
     "description": "",
     "require": {
-        "aaronicsubstances/kabomu": "^0.9.1",
+        "aaronicsubstances/kabomu": "^0.9.2",
         "monolog/monolog": "^3.8",
         "amphp/amp": "^3.0",
         "amphp/byte-stream": "^2.1",
